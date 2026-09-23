@@ -14,7 +14,7 @@
  function effectiveTheme() {
   var s = stored();
   if (s === 'dark' || s === 'light') return s;
-  return systemPrefersDark() ? 'dark' : 'light';
+  return 'dark'; // Pyntra defaults to the dark, enterprise look.
  }
 
  function apply(theme) {
