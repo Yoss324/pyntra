@@ -1,0 +1,53 @@
+name: "nuclei"
+command: "nuclei"
+enabled: true
+short_description: "Wrapper for the nuclei command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+  - Security assessment
+  - Penetration testing
+  - Vulnerability validation
+parameters:
+  - name: "target"
+    type: "string"
+    description: "Target host or address."
+    required: true
+    flag: "-u"
+    format: "flag"
+  - name: "severity"
+    type: "string"
+    description: "Parameter for the nuclei tool."
+    required: false
+    flag: "-s"
+    format: "flag"
+  - name: "tags"
+    type: "string"
+    description: "Parameter for the nuclei tool."
+    required: false
+    flag: "-tags"
+    format: "flag"
+  - name: "template"
+    type: "string"
+    description: "Parameter for the nuclei tool."
+    required: false
+    flag: "-t"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

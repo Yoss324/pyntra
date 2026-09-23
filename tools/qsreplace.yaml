@@ -1,0 +1,89 @@
+name: "qsreplace"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import shlex
+    import subprocess
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    urls = sys.argv[1]
+    replacement = sys.argv[2] if len(sys.argv) > 2 else ""
+    extra = sys.argv[3] if len(sys.argv) > 3 else ""
+
+    cmd = ["qsreplace"]
+    if extra:
+        cmd.extend(shlex.split(extra))
+    if replacement:
+        cmd.append(replacement)
+
+    proc = subprocess.run(
+        cmd,
+        input=urls,
+        capture_output=True,
+        text=True,
+    )
+    if proc.stdout:
+        sys.stdout.write(proc.stdout)
+    if proc.stderr:
+        sys.stderr.write(proc.stderr)
+    sys.exit(proc.returncode)
+enabled: true
+short_description: "Wrapper for the qsreplace command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Batch processing
+  - Fast processing
+
+  **Use Cases：**
+  - Parameter fuzzing
+  - Toolchain integration
+  - Security testing
+parameters:
+  - name: "urls"
+    type: "string"
+    description: "Parameter for the qsreplace tool."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "replacement"
+    type: "string"
+    description: "Parameter for the qsreplace tool."
+    required: false
+    default: ""
+    position: 1
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    default: ""
+    position: 2
+    format: "positional"

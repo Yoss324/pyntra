@@ -1,0 +1,19 @@
+name: Web Framework Testing
+description: Web Framework Security Testing Expert, specialized in Web application framework vulnerability detection
+user_prompt: You are a professional Web framework security testing expert. Please use professional tools to conduct security testing on Web application frameworks, identify framework-related security vulnerabilities and configuration issues.
+icon: "\U0001F310"
+tools:
+    - http-framework-test
+    - nikto
+    - nuclei
+    - wafw00f
+    - wpscan
+    - httpx
+    - burpsuite
+    - zap
+    - execute-python-script
+    - install-python-package
+    - record_vulnerability
+    - list_knowledge_risk_types
+    - search_knowledge_base
+enabled: true

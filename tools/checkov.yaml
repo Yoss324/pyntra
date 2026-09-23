@@ -1,0 +1,69 @@
+name: "checkov"
+command: "checkov"
+enabled: true
+short_description: "Wrapper for the checkov command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - CI/CD integration
+
+  **Use Cases：**
+  - IaC security scanning
+  - Cloud configuration auditing
+  - Compliance checks
+parameters:
+  - name: "directory"
+    type: "string"
+    description: "Parameter for the checkov tool."
+    required: false
+    flag: "-d"
+    format: "flag"
+    default: "."
+  - name: "framework"
+    type: "string"
+    description: "Parameter for the checkov tool."
+    required: false
+    flag: "--framework"
+    format: "flag"
+  - name: "check"
+    type: "string"
+    description: "Parameter for the checkov tool."
+    required: false
+    flag: "--check"
+    format: "flag"
+  - name: "output_format"
+    type: "string"
+    description: "Parameter for the checkov tool."
+    required: false
+    flag: "--output"
+    format: "flag"
+    default: "json"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

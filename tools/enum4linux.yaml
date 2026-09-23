@@ -1,0 +1,38 @@
+name: "enum4linux"
+command: "enum4linux"
+enabled: true
+short_description: "Wrapper for the enum4linux command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - SMB share enumeration
+  - User and group enumeration
+  - System information collection
+
+  **Use Cases：**
+  - SMBSecurity assessment
+  - Domain reconnaissance
+parameters:
+  - name: "target"
+    type: "string"
+    description: "Target host or address."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    default: "-a"
+    format: "positional"

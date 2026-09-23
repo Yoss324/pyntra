@@ -1,0 +1,35 @@
+name: "lightx"
+command: "lightx"
+enabled: false
+short_description: "Wrapper for the lightx command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+
+parameters:
+  - name: "target"
+    type: "string"
+    description: |
+      Target host or address.
+
+
+      **Example Values：**
+      - "http://172.16.0.4:9000"
+      - "192.168.1.1/24"
+      - "targets.txt"
+    required: true
+    flag: "-t"
+    format: "flag"

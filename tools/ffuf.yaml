@@ -1,0 +1,52 @@
+name: "ffuf"
+command: "ffuf"
+enabled: true
+short_description: "Wrapper for the ffuf command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Parameter fuzzing
+  - Virtual host discovery
+  - Multi-threading support
+
+  **Use Cases：**
+  - Directory enumeration
+  - Parameter discovery
+  - Content discovery
+parameters:
+  - name: "url"
+    type: "string"
+    description: "Target URL."
+    required: true
+    flag: "-u"
+    format: "flag"
+  - name: "wordlist"
+    type: "string"
+    description: "Path to the wordlist file."
+    required: false
+    default: "/usr/share/wordlists/dirb/common.txt"
+    flag: "-w"
+    format: "flag"
+  - name: "match_codes"
+    type: "string"
+    description: "Parameter for the ffuf tool."
+    required: false
+    default: "200,204,301,302,307,401,403"
+    flag: "-mc"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

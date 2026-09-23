@@ -1,0 +1,54 @@
+name: "smbmap"
+command: "smbmap"
+enabled: true
+short_description: "Wrapper for the smbmap command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - SMB share enumeration
+
+  **Use Cases：**
+  - SMBSecurity testing
+  - Penetration testing
+  - Network reconnaissance
+parameters:
+  - name: "target"
+    type: "string"
+    description: "Target host or address."
+    required: true
+    flag: "-H"
+    format: "flag"
+  - name: "username"
+    type: "string"
+    description: "Username."
+    required: false
+    flag: "-u"
+    format: "flag"
+  - name: "password"
+    type: "string"
+    description: "Password or secret."
+    required: false
+    flag: "-p"
+    format: "flag"
+  - name: "domain"
+    type: "string"
+    description: "Target domain name."
+    required: false
+    flag: "-d"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

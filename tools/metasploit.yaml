@@ -1,0 +1,68 @@
+name: "metasploit"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import json
+    import shlex
+    import subprocess
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    module = sys.argv[1]
+    options_raw = sys.argv[2] if len(sys.argv) > 2 else "{}"
+    extra = sys.argv[3] if len(sys.argv) > 3 else ""
+
+    try:
+        options = json.loads(options_raw) if options_raw else {}
+    except json.JSONDecodeError as exc:
+        sys.exit(1)
+
+    commands = [f"use {module}"]
+    for key, value in options.items():
+        commands.append(f"set {key} {value}")
+    commands.append("run")
+    commands.append("exit")
+
+    cmd = ["msfconsole", "-q", "-x", "; ".join(commands)]
+    if extra:
+        cmd.extend(shlex.split(extra))
+
+    subprocess.run(cmd, check=False)
+enabled: true
+short_description: "Wrapper for the metasploit command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+parameters:
+  - name: "module"
+    type: "string"
+    description: "Parameter for the metasploit tool."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "options"
+    type: "string"
+    description: "Parameter for the metasploit tool."
+    required: false
+    default: "{}"
+    position: 1
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    default: ""
+    position: 2
+    format: "positional"

@@ -1,0 +1,67 @@
+name: "paramspider"
+command: "paramspider"
+enabled: true
+short_description: "Wrapper for the paramspider command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Extension filtering
+
+  **Use Cases：**
+  - Parameter discovery
+  - Security testing
+parameters:
+  - name: "domain"
+    type: "string"
+    description: "Target domain name."
+    required: true
+    flag: "-d"
+    format: "flag"
+  - name: "level"
+    type: "int"
+    description: "Parameter for the paramspider tool."
+    required: false
+    flag: "-l"
+    format: "flag"
+    default: 2
+  - name: "exclude"
+    type: "string"
+    description: "Parameter for the paramspider tool."
+    required: false
+    flag: "-e"
+    format: "flag"
+  - name: "output"
+    type: "string"
+    description: "Output path or output mode."
+    required: false
+    flag: "-o"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

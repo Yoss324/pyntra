@@ -1,0 +1,227 @@
+# ============================================
+# Pyntra Configuration File
+# ============================================
+# This configuration file supports visual configuration through the Web interface
+# Click the "Settings" button in the top-right corner to modify the configuration
+# ============================================
+
+# ============================================
+# System Settings
+# ============================================
+
+# Frontend display version number (optional, if not filled, default version is displayed)
+version: "v1.5.2"
+# Server configuration
+server:
+  host: 0.0.0.0 # Listen address, 0.0.0.0 means listen on all network interfaces
+  port: 8080 # HTTP service port, accessible via browser at http://localhost:8080
+# Authentication configuration
+auth:
+  password: Root@1234 # Web login password, please change to a strong password
+  session_duration_hours: 12 # Login validity period (hours), re-login required after timeout
+# Logging configuration
+log:
+  level: info # Log level: debug(debugging), info(information), warn(warning), error(error)
+  output: stdout # Log output location: stdout(standard output), stderr(standard error), or file path
+# ============================================
+# Conversation-Related Configuration
+# ============================================
+
+# AI Model Configuration (supports OpenAI compatible API)
+# Required fields: api_key, base_url, model must be filled for normal operation
+# Supported API providers:
+#   - OpenAI: https://api.openai.com/v1
+#   - DeepSeek: https://api.deepseek.com/v1
+#   - Other OpenAI protocol compatible APIs
+#   - Ollama: http://localhost:11434/v1 (or your Ollama server address)
+# Common models: gpt-4, gpt-3.5-turbo, deepseek-chat, claude-3-opus, etc.
+# provider: optional values: openai(default) | claude(automatic bridging to Anthropic Claude Messages API)
+
+
+openai:
+  provider: openai # API provider: openai(default, OpenAI protocol compatible) | claude(automatic bridging to Anthropic Claude Messages API)
+  base_url: http://localhost:11434/v1 # Ollama API base URL (required)
+  api_key: ollama # API key (required, but Ollama doesn't use it - can be any value)
+  model: qwen2.5:7b # Model name (required) - Using qwen2.5:7b
+  max_total_tokens: 8192 # Maximum Token number limit for LLM context (adjusted for qwen2.5:7b context window)
+# ============================================
+# Information Gathering (FOFA) Configuration (Optional)
+# ============================================
+# Used for calling FOFA API on the "Information Collection" page (backend proxy to avoid exposing key in frontend)
+# Can also be configured via environment variables: FOFA_EMAIL / FOFA_API_KEY (higher priority)
+fofa:
+  base_url: https://fofa.info/api/v1/search/all # Optional, use default if left empty
+  email: "" # FOFA account email (optional, recommended to fill in system settings)
+  api_key: "" # FOFA API Key (optional, recommended to fill in system settings)
+# Agent Configuration
+# When max iterations is reached, AI automatically summarizes test results
+agent:
+  max_iterations: 120 # Maximum iterations, maximum number of tool call rounds AI agent executes
+  large_result_threshold: 102400 # Large result threshold (bytes), default 50KB, automatically saved to storage if exceeded
+  result_storage_dir: tmp # Result storage directory, large results will be saved here
+  tool_timeout_minutes: 30 # Maximum tool execution time per call (minutes), auto-terminate on timeout; 0 means no limit (not recommended, prone to long hangs)
+  # system_prompt_path: prompts/single-react.md # Optional: single agent system prompt file (relative to config file location); replaces built-in prompt when non-empty and readable
+# Multi-Agent (CloudWeGo Eino DeepAgent, coexists with single Agent /api/agent-loop above)
+# Depends on pulling from go.mod; if download fails, set: go env -w GOPROXY=https://proxy.golang.org,direct
+# After enabling, service restart required to register /api/multi-agent and /api/multi-agent/stream; Deep / Plan-Execute / Supervisor modes passed in request body from conversation page and WebShell; robots/batch without request body default to deep
+multi_agent:
+  enabled: true
+  default_mode: multi # single | multi (frontend default, still switchable via UI)
+  robot_use_multi_agent: true # when true, WeChat Work/DingTalk/Lark robots also use Eino multi-agent (higher cost)
+  batch_use_multi_agent: false # when true, each sub-task in "Batch Tasks" queue also uses Eino multi-agent (higher cost)
+  max_iteration: 0 # Main agent / plan_execute executor max iterations, 0 means use agent.max_iterations
+  # plan_execute specific: execute↔replan outer loop limit, 0 means Eino default 10. Executor doesn't expose Handlers: patch/reduction/plantask don't apply to PE, but tool_search tool list splitting still applies via shared ToolsConfig.
+  plan_execute_loop_max_iterations: 0
+  sub_agent_max_iterations: 120
+  without_general_sub_agent: false # when false, keep Deep's built-in general-purpose sub-agent
+  without_write_todos: false
+  orchestrator_instruction: "" # Deep main agent: agents/orchestrator.md (or single .md with kind: orchestrator) main content priority; use this when empty; use Eino default when both empty
+  orchestrator_instruction_plan_execute: "" # plan_execute main agent: agents/orchestrator-plan-execute.md main content priority; use this when empty; use built-in plan_execute prompt when both empty (don't use Deep's orchestrator_instruction)
+  orchestrator_instruction_supervisor: "" # supervisor main agent: agents/orchestrator-supervisor.md main content priority; use this when empty; use built-in supervisor prompt when both empty (transfer/exit explanation still appended by runtime; don't use Deep's orchestrator_instruction)
+  # Eino official Skills: progressive disclosure + optional local file/Shell (eino-ext local backend). Skills directory see skills_dir.
+  eino_skills:
+    disable: false # true: don't register skill progressive disclosure middleware, don't mount local FS/Shell tools; false: load per switches below
+    filesystem_tools: true # true: register read_file/glob/grep/write/edit/execute (use cautiously in authorized environments); false: only skill, don't expose local read/write and Shell
+    skill_tool_name: skill # "load skill" tool name callable by model, generally keep as skill; consistent with invocation name in skill package documentation
+  # Eino ADK middleware and Deep/Supervisor parameter tuning (struct see internal/config/config.go → MultiAgentEinoMiddlewareConfig)
+  eino_middleware:
+    patch_tool_calls: true # true: patch floating tool_call without tool_result in history (more stable after stream interruption/retry); false: disabled; field omitted defaults to true
+    tool_search_enable: false # true: enable tool_search when tool count ≥ min, only first N tools always present, others unlocked dynamically by regex, save token and reduce mis-selection; false: all tools in context
+    tool_search_min_tools: 20 # Enable tool_search when reaching this count (avoid unnecessary overhead with few tools); use with always_visible
+    tool_search_always_visible: 12 # Number of tools always directly exposed to model (order matches role tool list); remaining tools enter dynamic pool, need tool_search to unlock
+    plantask_enable: false # true: main agent (Deep / Supervisor main) mount TaskCreate/Get/Update/List; requires eino_skills available and skills_dir exists, otherwise only log and skip
+    plantask_rel_dir: .eino/plantask # Structured task file subdirectory relative to skills_dir, further organized by session ID
+    reduction_enable: false # true: truncate/save large tool output to control context; depends on same eino local disk backend as plantask, don't mount without backend
+    reduction_root_dir: "" # non-empty: truncate/cleanup content save root path; empty: use default path under system temp directory isolated by session
+    reduction_clear_exclude: [] # Additional tool name list not participating in "cleanup phase" (merges with task/transfer/exit built-in exclusions); use YAML list when needed
+    reduction_sub_agents: false # true: sub-agents also use reduction; false: only orchestration main agent uses reduction
+    checkpoint_dir: "" # non-empty: enable file-type CheckPointStore by session subdirectory for adk.NewRunner, facilitates interrupt recovery persistence; HTTP/frontend Resume process needs separate docking
+    deep_output_key: "" # non-empty: write final assistant output to adk session key (Deep and Supervisor main agents); empty means don't write
+    deep_model_retry_max_retries: 0 # >0: framework-level max retries when ChatModel call fails (Deep and Supervisor main); 0: no retry
+    task_tool_description_prefix: "" # non-empty: only Deep's task tool uses custom description prefix, appended with sub-agent name at runtime; empty uses Eino default generation logic
+# Database Configuration
+database:
+  path: data/conversations.db # SQLite database file path, used to store conversation history and messages
+  knowledge_db_path: data/knowledge.db # Knowledge base database file path (optional, use session database if empty), used to store knowledge items and vector embeddings, can be independently copied and reused
+# ============================================
+# Task Management Related Configuration
+# ============================================
+# (Configuration items already included in conversation-related configuration above)
+
+# ============================================
+# Vulnerability Management Related Configuration
+# ============================================
+
+# Security Tool Configuration
+# System loads all .yaml format tool configuration files from this directory
+# Recommended approach: create independent configuration file for each tool in tools/ directory
+security:
+  tools_dir: tools # Tool configuration file directory (relative to config file location)
+  # Tool description mode: source of description exposed to AI/API when loading tools from tools directory
+  #   short - prioritize short_description (brief description, save token), use description if empty
+  #   full  - use description (detailed description)
+  tool_description_mode: full
+# ============================================
+# MCP Related Configuration
+# ============================================
+
+# MCP Protocol Configuration
+# MCP (Model Context Protocol) used for tool registration and invocation
+mcp:
+  enabled: false # Whether to enable MCP server (http mode)
+  host: 0.0.0.0 # MCP server listen address
+  port: 8081 # MCP server port
+  auth_header: "X-MCP-Token" # Authentication: request must carry this header with value matching auth_header_value to call. Leave empty for no authentication
+  auth_header_value: "" # Authentication key value (used with auth_header, recommend using random string)
+# External MCP Configuration
+external_mcp:
+  servers: {}
+# ============================================
+# Knowledge Base Related Configuration
+# ============================================
+knowledge:
+  enabled: false # Whether to enable knowledge retrieval function
+  base_path: knowledge_base # Knowledge base directory path (relative to config file location)
+  embedding:
+    provider: openai # Embedding model provider (currently supports openai-compatible APIs including Ollama)
+    model: nomic-embed-text # Ollama embedding model (use nomic-embed-text, mxbai-embed-large, etc.)
+    base_url: http://localhost:11434/v1 # Ollama API base URL (leave empty to use OpenAI config base_url)
+    api_key: ollama # API key (leave empty to use OpenAI config api_key)
+  retrieval:
+    top_k: 5 # Number of Top-K results returned by retrieval
+    similarity_threshold: 0.4 # Cosine similarity threshold (0-1), results below this value will be filtered
+    # Post-retrieval processing: normalized deduplication of main content; context budget; optional DocumentReranker code injection for reranking
+    post_retrieve:
+      prefetch_top_k: 0 # 0 same as top_k; can set to 15~30 to fill top_k after deduplication
+      max_context_chars: 0 # 0 no limit; otherwise maximum Unicode characters in returned main content (entire chunk)
+      max_context_tokens: 0 # 0 no limit; tiktoken total token limit
+    sub_index_filter: ""
+  # ============================================
+  # Indexing Configuration (for solving API limit issues)
+  # ============================================
+  indexing:
+    # Chunk configuration
+    chunk_size: 512 # Maximum token count per chunk (default 512), long text will be split into multiple chunks
+    chunk_overlap: 50 # Token overlap between chunks (default 50), maintains context coherence
+    max_chunks_per_item: 0 # Maximum chunk count per knowledge item (0 means no limit), prevents single file consuming excessive API quota
+    # Rate limit configuration (solving 429 errors)
+    max_rpm: 0 # Maximum requests per minute (default 0 means no limit), e.g., OpenAI default 200 RPM
+    rate_limit_delay_ms: 300 # Request interval milliseconds (default 300), used to avoid API rate limiting, set to 0 for no limit
+    # Recommended values: 200 requests/minute ≈ 300ms, 100 requests/minute ≈ 600ms
+
+    # Retry configuration
+    max_retries: 3 # Maximum retry count (default 3), auto-retry on rate limit or server errors
+    retry_delay_ms: 1000 # Retry interval milliseconds (default 1000), each retry increases delay
+    # Chunk strategy (Eino): markdown_then_recursive = split by Markdown headers first then recursively; recursive = recursive split only. Default markdown_then_recursive when empty
+    chunk_strategy: markdown_then_recursive
+    # Embedding HTTP request timeout (seconds). 0 means use built-in default (usually 120), consistent with vectorization API client
+    request_timeout_seconds: 120
+    # true: during indexing, prioritize disk file content pointed to by knowledge item file_path (Eino FileLoader); false: use main content in database. Falls back to DB on read disk failure
+    prefer_source_file: false
+    # Maximum text count per embedding API request (index writes batch by this). Must be ≤ service provider limit (e.g., some compatible interfaces max 10); too large causes 400
+    batch_size: 10
+    # Eino indexer.WithSubIndexes: logical partition label list, written to vector table sub_indexes, retrieval can filter with sub_index_filter; empty [] if no need
+    sub_indexes: []
+# ============================================
+# Robot Configuration (WeChat Work, DingTalk, Lark)
+# ============================================
+# Used for mobile conversations with Pyntra via WeChat Work/DingTalk/Lark, usable without server deployment
+# Configurable in System Settings -> Robot Settings
+robots:
+  wecom: # WeChat Work
+    enabled: false
+    token: ""
+    encoding_aes_key: ""
+    corp_id: ""
+    secret: ""
+    agent_id: 0
+  dingtalk: # DingTalk
+    enabled: false
+    client_id: ""
+    client_secret: ""
+  lark: # Lark
+    enabled: false
+    app_id: ""
+    app_secret: ""
+    verify_token: ""
+# ============================================
+# Skills Related Configuration
+# ============================================
+
+# Skills directory: each subdirectory only contains standard SKILL.md (Agent Skills: front matter only name, description) + optional auxiliary files; no SKILL.yaml
+# Example: skills/pentest-eino-demo/
+skills_dir: skills # Skills configuration file directory (relative to config file location)
+# ============================================
+# Multi-Agent Sub-Agent (Markdown, sole maintenance location)
+# ============================================
+# Each .md: YAML front matter (name / id / description / tools / bind_role / max_iterations / optional kind: orchestrator) + main content as system prompt
+# Main agent: fixed filename orchestrator.md, or any filename + front matter kind: orchestrator (only one allowed per directory); main agent not in task sub-agent list
+# Advanced usage: can still write sub_agents within multi_agent block, will merge with directory and YAML can be overridden by .md when same id
+agents_dir: agents
+# ============================================
+# Role Related Configuration
+# ============================================
+
+# System loads all .yaml format role configuration files from this directory
+# Each role should have independent configuration file, e.g.: roles/CTF.yaml, roles/Default.yaml, etc.
+roles_dir: roles # Role configuration file directory (relative to config file location)

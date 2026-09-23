@@ -1,0 +1,97 @@
+name: "enum4linux-ng"
+command: "enum4linux-ng"
+enabled: true
+short_description: "Wrapper for the enum4linux-ng command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - SMB share enumeration
+  - User and group enumeration
+  - System information collection
+
+  **Use Cases：**
+  - SMBSecurity assessment
+  - Domain reconnaissance
+  - Security testing
+parameters:
+  - name: "target"
+    type: "string"
+    description: "Target host or address."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "username"
+    type: "string"
+    description: "Username."
+    required: false
+    flag: "-u"
+    format: "flag"
+  - name: "password"
+    type: "string"
+    description: "Password or secret."
+    required: false
+    flag: "-p"
+    format: "flag"
+  - name: "domain"
+    type: "string"
+    description: "Target domain name."
+    required: false
+    flag: "-d"
+    format: "flag"
+  - name: "shares"
+    type: "bool"
+    description: "Parameter for the enum4linux-ng tool."
+    required: false
+    flag: "-S"
+    format: "flag"
+    default: true
+  - name: "users"
+    type: "bool"
+    description: "Parameter for the enum4linux-ng tool."
+    required: false
+    flag: "-U"
+    format: "flag"
+    default: true
+  - name: "groups"
+    type: "bool"
+    description: "Parameter for the enum4linux-ng tool."
+    required: false
+    flag: "-G"
+    format: "flag"
+    default: true
+  - name: "policy"
+    type: "bool"
+    description: "Parameter for the enum4linux-ng tool."
+    required: false
+    flag: "-P"
+    format: "flag"
+    default: true
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

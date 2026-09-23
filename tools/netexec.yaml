@@ -1,0 +1,64 @@
+name: "netexec"
+command: "netexec"
+enabled: true
+short_description: "Wrapper for the netexec command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Lateral movement
+
+  **Use Cases：**
+parameters:
+  - name: "protocol"
+    type: "string"
+    description: "Parameter for the netexec tool."
+    required: false
+    default: "smb"
+    position: 0
+    format: "positional"
+  - name: "target"
+    type: "string"
+    description: "Target host or address."
+    required: true
+    position: 1
+    format: "positional"
+  - name: "username"
+    type: "string"
+    description: "Username."
+    required: false
+    flag: "-u"
+    format: "flag"
+  - name: "password"
+    type: "string"
+    description: "Password or secret."
+    required: false
+    flag: "-p"
+    format: "flag"
+  - name: "hash_value"
+    type: "string"
+    description: "Parameter for the netexec tool."
+    required: false
+    flag: "-H"
+    format: "flag"
+  - name: "module"
+    type: "string"
+    description: "Parameter for the netexec tool."
+    required: false
+    flag: "-M"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

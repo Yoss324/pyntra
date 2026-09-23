@@ -1,0 +1,70 @@
+name: "graphql-scanner"
+command: "graphqlmap"
+enabled: true
+short_description: "Wrapper for the graphql-scanner command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+  - GraphQLSecurity testing
+  - APISecurity assessment
+  - Vulnerability discovery
+  - Security testing
+parameters:
+  - name: "endpoint"
+    type: "string"
+    description: "Target endpoint."
+    required: true
+    flag: "-u"
+    format: "flag"
+  - name: "introspection"
+    type: "bool"
+    description: "Parameter for the graphql-scanner tool."
+    required: false
+    default: true
+    flag: "--introspection"
+    format: "flag"
+  - name: "query_depth"
+    type: "int"
+    description: "Parameter for the graphql-scanner tool."
+    required: false
+    default: 10
+    flag: "--depth"
+    format: "flag"
+  - name: "test_mutations"
+    type: "bool"
+    description: "Parameter for the graphql-scanner tool."
+    required: false
+    default: true
+    flag: "--mutations"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

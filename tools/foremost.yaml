@@ -1,0 +1,59 @@
+name: "foremost"
+command: "foremost"
+enabled: true
+short_description: "Wrapper for the foremost command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+  - Forensics analysis
+parameters:
+  - name: "input_file"
+    type: "string"
+    description: "Parameter for the foremost tool."
+    required: true
+    flag: "-i"
+    format: "flag"
+  - name: "output_dir"
+    type: "string"
+    description: "Parameter for the foremost tool."
+    required: false
+    flag: "-o"
+    format: "flag"
+    default: "/tmp/foremost_output"
+  - name: "file_types"
+    type: "string"
+    description: "Parameter for the foremost tool."
+    required: false
+    flag: "-t"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

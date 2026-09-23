@@ -1,0 +1,100 @@
+name: "angr"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import shlex
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.stderr.write("Missing script content\n")
+        sys.exit(1)
+
+    script_content = sys.argv[1]
+    binary = sys.argv[2] if len(sys.argv) > 2 else ""
+    find_address = sys.argv[3] if len(sys.argv) > 3 else ""
+    avoid_addresses = sys.argv[4] if len(sys.argv) > 4 else ""
+    analysis_type = sys.argv[5] if len(sys.argv) > 5 else ""
+    extra = sys.argv[6] if len(sys.argv) > 6 else ""
+
+    context = {
+        "binary_path": binary,
+        "find_address": find_address,
+        "avoid_addresses": [addr.strip() for addr in avoid_addresses.split(",") if addr.strip()],
+        "analysis_type": analysis_type or "symbolic",
+    }
+
+    if extra:
+        context["additional_args"] = shlex.split(extra)
+    else:
+        context["additional_args"] = []
+
+    exec(script_content, context)
+enabled: true
+short_description: "Wrapper for the angr command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+parameters:
+  - name: "script_content"
+    type: "string"
+    description: "Parameter for the angr tool."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "binary"
+    type: "string"
+    description: "Whether the content is Base64-encoded binary data."
+    required: false
+    default: ""
+    position: 1
+    format: "positional"
+  - name: "find_address"
+    type: "string"
+    description: "Parameter for the angr tool."
+    required: false
+    default: ""
+    position: 2
+    format: "positional"
+  - name: "avoid_addresses"
+    type: "string"
+    description: "Parameter for the angr tool."
+    required: false
+    default: ""
+    position: 3
+    format: "positional"
+  - name: "analysis_type"
+    type: "string"
+    description: "Parameter for the angr tool."
+    required: false
+    default: "symbolic"
+    position: 4
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Examples:**
+      - "--max-depth 8 --timeout 60"
+
+      **Notes：**
+    required: false
+    default: ""
+    position: 5
+    format: "positional"

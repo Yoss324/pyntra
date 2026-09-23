@@ -1,0 +1,673 @@
+package handler
+
+import (
+	"bytes"
+	"database/sql"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"pyntra/internal/database"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+)
+type WebShellHandler struct {
+	logger *zap.Logger
+	client *http.Client
+	db     *database.DB
+}
+func NewWebShellHandler(logger *zap.Logger, db *database.DB) *WebShellHandler {
+	return &WebShellHandler{
+		logger: logger,
+		client: &http.Client{
+			Timeout:   30 * time.Second,
+			Transport: &http.Transport{DisableKeepAlives: false},
+		},
+		db: db,
+	}
+}
+
+// CreateConnectionRequest createconnectionrequest
+type CreateConnectionRequest struct {
+	URL      string `json:"url" binding:"required"`
+	Password string `json:"password"`
+	Type     string `json:"type"`
+	Method   string `json:"method"`
+	CmdParam string `json:"cmd_param"`
+	Remark   string `json:"remark"`
+}
+
+// UpdateConnectionRequest updateconnectionrequest
+type UpdateConnectionRequest struct {
+	URL      string `json:"url" binding:"required"`
+	Password string `json:"password"`
+	Type     string `json:"type"`
+	Method   string `json:"method"`
+	CmdParam string `json:"cmd_param"`
+	Remark   string `json:"remark"`
+}
+func (h *WebShellHandler) ListConnections(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not available"})
+		return
+	}
+	list, err := h.db.ListWebshellConnections()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if list == nil {
+		list = []database.WebShellConnection{}
+	}
+	c.JSON(http.StatusOK, list)
+}
+
+// CreateConnection create WebShell connection（POST /api/webshell/connections）
+func (h *WebShellHandler) CreateConnection(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not available"})
+		return
+	}
+	var req CreateConnectionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.URL = strings.TrimSpace(req.URL)
+	if req.URL == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "url is required"})
+		return
+	}
+	if _, err := url.Parse(req.URL); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid url"})
+		return
+	}
+	method := strings.ToLower(strings.TrimSpace(req.Method))
+	if method != "get" && method != "post" {
+		method = "post"
+	}
+	shellType := strings.ToLower(strings.TrimSpace(req.Type))
+	if shellType == "" {
+		shellType = "php"
+	}
+	conn := &database.WebShellConnection{
+		ID:        "ws_" + strings.ReplaceAll(uuid.New().String(), "-", "")[:12],
+		URL:       req.URL,
+		Password:  strings.TrimSpace(req.Password),
+		Type:      shellType,
+		Method:    method,
+		CmdParam:  strings.TrimSpace(req.CmdParam),
+		Remark:    strings.TrimSpace(req.Remark),
+		CreatedAt: time.Now(),
+	}
+	if err := h.db.CreateWebshellConnection(conn); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, conn)
+}
+
+// UpdateConnection update WebShell connection（PUT /api/webshell/connections/:id）
+func (h *WebShellHandler) UpdateConnection(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not available"})
+		return
+	}
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+	var req UpdateConnectionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.URL = strings.TrimSpace(req.URL)
+	if req.URL == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "url is required"})
+		return
+	}
+	if _, err := url.Parse(req.URL); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid url"})
+		return
+	}
+	method := strings.ToLower(strings.TrimSpace(req.Method))
+	if method != "get" && method != "post" {
+		method = "post"
+	}
+	shellType := strings.ToLower(strings.TrimSpace(req.Type))
+	if shellType == "" {
+		shellType = "php"
+	}
+	conn := &database.WebShellConnection{
+		ID:       id,
+		URL:      req.URL,
+		Password: strings.TrimSpace(req.Password),
+		Type:     shellType,
+		Method:   method,
+		CmdParam: strings.TrimSpace(req.CmdParam),
+		Remark:   strings.TrimSpace(req.Remark),
+	}
+	if err := h.db.UpdateWebshellConnection(conn); err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "connection not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	updated, _ := h.db.GetWebshellConnection(id)
+	if updated != nil {
+		c.JSON(http.StatusOK, updated)
+	} else {
+		c.JSON(http.StatusOK, conn)
+	}
+}
+
+// DeleteConnection delete WebShell connection（DELETE /api/webshell/connections/:id）
+func (h *WebShellHandler) DeleteConnection(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not available"})
+		return
+	}
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+	if err := h.db.DeleteWebshellConnection(id); err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "connection not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+func (h *WebShellHandler) GetConnectionState(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not available"})
+		return
+	}
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+	conn, err := h.db.GetWebshellConnection(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if conn == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "connection not found"})
+		return
+	}
+	stateJSON, err := h.db.GetWebshellConnectionState(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	var state interface{}
+	if err := json.Unmarshal([]byte(stateJSON), &state); err != nil {
+		state = map[string]interface{}{}
+	}
+	c.JSON(http.StatusOK, gin.H{"state": state})
+}
+func (h *WebShellHandler) SaveConnectionState(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not available"})
+		return
+	}
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+	conn, err := h.db.GetWebshellConnection(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if conn == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "connection not found"})
+		return
+	}
+	var req struct {
+		State json.RawMessage `json:"state"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	raw := req.State
+	if len(raw) == 0 {
+		raw = json.RawMessage(`{}`)
+	}
+	if len(raw) > 2*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "state payload too large (max 2MB)"})
+		return
+	}
+	var anyJSON interface{}
+	if err := json.Unmarshal(raw, &anyJSON); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "state must be valid json"})
+		return
+	}
+	if err := h.db.UpsertWebshellConnectionState(id, string(raw)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+func (h *WebShellHandler) GetAIHistory(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not available"})
+		return
+	}
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+	conv, err := h.db.GetConversationByWebshellConnectionID(id)
+	if err != nil {
+		h.logger.Warn("get WebShell AI conversationfailed", zap.String("connectionId", id), zap.Error(err))
+		c.JSON(http.StatusOK, gin.H{"conversationId": nil, "messages": []database.Message{}})
+		return
+	}
+	if conv == nil {
+		c.JSON(http.StatusOK, gin.H{"conversationId": nil, "messages": []database.Message{}})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"conversationId": conv.ID, "messages": conv.Messages})
+}
+func (h *WebShellHandler) ListAIConversations(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "database not available"})
+		return
+	}
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+	list, err := h.db.ListConversationsByWebshellConnectionID(id)
+	if err != nil {
+		h.logger.Warn("list WebShell AI conversationfailed", zap.String("connectionId", id), zap.Error(err))
+		c.JSON(http.StatusOK, []database.WebShellConversationItem{})
+		return
+	}
+	if list == nil {
+		list = []database.WebShellConversationItem{}
+	}
+	c.JSON(http.StatusOK, list)
+}
+type ExecRequest struct {
+	URL      string `json:"url" binding:"required"`
+	Password string `json:"password"`
+	Type     string `json:"type"`      // php, asp, aspx, jsp, custom
+	Method   string `json:"method"`
+	CmdParam string `json:"cmd_param"`
+	Command  string `json:"command" binding:"required"`
+}
+
+// ExecResponse executecommandresponse
+type ExecResponse struct {
+	OK       bool   `json:"ok"`
+	Output   string `json:"output"`
+	Error    string `json:"error,omitempty"`
+	HTTPCode int    `json:"http_code,omitempty"`
+}
+type FileOpRequest struct {
+	URL        string `json:"url" binding:"required"`
+	Password   string `json:"password"`
+	Type       string `json:"type"`
+	Method     string `json:"method"`
+	CmdParam   string `json:"cmd_param"`
+	Action     string `json:"action" binding:"required"` // list, read, delete, write, mkdir, rename, upload, upload_chunk
+	Path       string `json:"path"`
+	TargetPath string `json:"target_path"`
+	Content    string `json:"content"`
+	ChunkIndex int    `json:"chunk_index"`
+}
+type FileOpResponse struct {
+	OK     bool   `json:"ok"`
+	Output string `json:"output"`
+	Error  string `json:"error,omitempty"`
+}
+
+func (h *WebShellHandler) Exec(c *gin.Context) {
+	var req ExecRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.URL = strings.TrimSpace(req.URL)
+	req.Command = strings.TrimSpace(req.Command)
+	if req.URL == "" || req.Command == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "url and command are required"})
+		return
+	}
+
+	parsed, err := url.Parse(req.URL)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid url: only http(s) allowed"})
+		return
+	}
+
+	useGET := strings.ToUpper(strings.TrimSpace(req.Method)) == "GET"
+	cmdParam := strings.TrimSpace(req.CmdParam)
+	if cmdParam == "" {
+		cmdParam = "cmd"
+	}
+	var httpReq *http.Request
+	if useGET {
+		targetURL := h.buildExecURL(req.URL, req.Type, req.Password, cmdParam, req.Command)
+		httpReq, err = http.NewRequest(http.MethodGet, targetURL, nil)
+	} else {
+		body := h.buildExecBody(req.Type, req.Password, cmdParam, req.Command)
+		httpReq, err = http.NewRequest(http.MethodPost, req.URL, bytes.NewReader(body))
+		httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	if err != nil {
+		h.logger.Warn("webshell exec NewRequest", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, ExecResponse{OK: false, Error: err.Error()})
+		return
+	}
+	httpReq.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Pyntra-WebShell/1.0)")
+
+	resp, err := h.client.Do(httpReq)
+	if err != nil {
+		h.logger.Warn("webshell exec Do", zap.String("url", req.URL), zap.Error(err))
+		c.JSON(http.StatusOK, ExecResponse{OK: false, Error: err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	out, _ := io.ReadAll(resp.Body)
+	output := string(out)
+	httpCode := resp.StatusCode
+
+	c.JSON(http.StatusOK, ExecResponse{
+		OK:       resp.StatusCode == http.StatusOK,
+		Output:   output,
+		HTTPCode: httpCode,
+	})
+}
+func (h *WebShellHandler) buildExecBody(shellType, password, cmdParam, command string) []byte {
+	form := h.execParams(shellType, password, cmdParam, command)
+	return []byte(form.Encode())
+}
+func (h *WebShellHandler) buildExecURL(baseURL, shellType, password, cmdParam, command string) string {
+	form := h.execParams(shellType, password, cmdParam, command)
+	if parsed, err := url.Parse(baseURL); err == nil {
+		parsed.RawQuery = form.Encode()
+		return parsed.String()
+	}
+	return baseURL + "?" + form.Encode()
+}
+
+func (h *WebShellHandler) execParams(shellType, password, cmdParam, command string) url.Values {
+	shellType = strings.ToLower(strings.TrimSpace(shellType))
+	if shellType == "" {
+		shellType = "php"
+	}
+	if strings.TrimSpace(cmdParam) == "" {
+		cmdParam = "cmd"
+	}
+	form := url.Values{}
+	form.Set("pass", password)
+	form.Set(cmdParam, command)
+	return form
+}
+
+func (h *WebShellHandler) FileOp(c *gin.Context) {
+	var req FileOpRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.URL = strings.TrimSpace(req.URL)
+	req.Action = strings.ToLower(strings.TrimSpace(req.Action))
+	if req.URL == "" || req.Action == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "url and action are required"})
+		return
+	}
+
+	parsed, err := url.Parse(req.URL)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid url: only http(s) allowed"})
+		return
+	}
+	var command string
+	shellType := strings.ToLower(strings.TrimSpace(req.Type))
+	switch req.Action {
+	case "list":
+		path := strings.TrimSpace(req.Path)
+		if path == "" {
+			path = "."
+		}
+		if shellType == "asp" || shellType == "aspx" {
+			command = "dir " + h.escapePath(path)
+		} else {
+			command = "ls -la " + h.escapePath(path)
+		}
+	case "read":
+		if shellType == "asp" || shellType == "aspx" {
+			command = "type " + h.escapePath(strings.TrimSpace(req.Path))
+		} else {
+			command = "cat " + h.escapePath(strings.TrimSpace(req.Path))
+		}
+	case "delete":
+		if shellType == "asp" || shellType == "aspx" {
+			command = "del " + h.escapePath(strings.TrimSpace(req.Path))
+		} else {
+			command = "rm -f " + h.escapePath(strings.TrimSpace(req.Path))
+		}
+	case "write":
+		path := h.escapePath(strings.TrimSpace(req.Path))
+		command = "echo " + h.escapeForEcho(req.Content) + " > " + path
+	case "mkdir":
+		path := strings.TrimSpace(req.Path)
+		if path == "" {
+			c.JSON(http.StatusBadRequest, FileOpResponse{OK: false, Error: "path is required for mkdir"})
+			return
+		}
+		if shellType == "asp" || shellType == "aspx" {
+			command = "md " + h.escapePath(path)
+		} else {
+			command = "mkdir -p " + h.escapePath(path)
+		}
+	case "rename":
+		oldPath := strings.TrimSpace(req.Path)
+		newPath := strings.TrimSpace(req.TargetPath)
+		if oldPath == "" || newPath == "" {
+			c.JSON(http.StatusBadRequest, FileOpResponse{OK: false, Error: "path and target_path are required for rename"})
+			return
+		}
+		if shellType == "asp" || shellType == "aspx" {
+			command = "move /y " + h.escapePath(oldPath) + " " + h.escapePath(newPath)
+		} else {
+			command = "mv " + h.escapePath(oldPath) + " " + h.escapePath(newPath)
+		}
+	case "upload":
+		path := strings.TrimSpace(req.Path)
+		if path == "" {
+			c.JSON(http.StatusBadRequest, FileOpResponse{OK: false, Error: "path is required for upload"})
+			return
+		}
+		if len(req.Content) > 512*1024 {
+			c.JSON(http.StatusBadRequest, FileOpResponse{OK: false, Error: "upload content too large (max 512KB base64)"})
+			return
+		}
+		command = "echo " + "'" + req.Content + "'" + " | base64 -d > " + h.escapePath(path)
+	case "upload_chunk":
+		path := strings.TrimSpace(req.Path)
+		if path == "" {
+			c.JSON(http.StatusBadRequest, FileOpResponse{OK: false, Error: "path is required for upload_chunk"})
+			return
+		}
+		redir := ">>"
+		if req.ChunkIndex == 0 {
+			redir = ">"
+		}
+		command = "echo " + "'" + req.Content + "'" + " | base64 -d " + redir + " " + h.escapePath(path)
+	default:
+		c.JSON(http.StatusBadRequest, FileOpResponse{OK: false, Error: "unsupported action: " + req.Action})
+		return
+	}
+
+	useGET := strings.ToUpper(strings.TrimSpace(req.Method)) == "GET"
+	cmdParam := strings.TrimSpace(req.CmdParam)
+	if cmdParam == "" {
+		cmdParam = "cmd"
+	}
+	var httpReq *http.Request
+	if useGET {
+		targetURL := h.buildExecURL(req.URL, req.Type, req.Password, cmdParam, command)
+		httpReq, err = http.NewRequest(http.MethodGet, targetURL, nil)
+	} else {
+		body := h.buildExecBody(req.Type, req.Password, cmdParam, command)
+		httpReq, err = http.NewRequest(http.MethodPost, req.URL, bytes.NewReader(body))
+		httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, FileOpResponse{OK: false, Error: err.Error()})
+		return
+	}
+	httpReq.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Pyntra-WebShell/1.0)")
+
+	resp, err := h.client.Do(httpReq)
+	if err != nil {
+		c.JSON(http.StatusOK, FileOpResponse{OK: false, Error: err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	out, _ := io.ReadAll(resp.Body)
+	output := string(out)
+
+	c.JSON(http.StatusOK, FileOpResponse{
+		OK:     resp.StatusCode == http.StatusOK,
+		Output: output,
+	})
+}
+
+func (h *WebShellHandler) escapePath(p string) string {
+	if p == "" {
+		return "."
+	}
+	return "'" + strings.ReplaceAll(p, "'", "'\\''") + "'"
+}
+
+func (h *WebShellHandler) escapeForEcho(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'"
+}
+func (h *WebShellHandler) ExecWithConnection(conn *database.WebShellConnection, command string) (output string, ok bool, errMsg string) {
+	if conn == nil {
+		return "", false, "connection is nil"
+	}
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return "", false, "command is required"
+	}
+	useGET := strings.ToUpper(strings.TrimSpace(conn.Method)) == "GET"
+	cmdParam := strings.TrimSpace(conn.CmdParam)
+	if cmdParam == "" {
+		cmdParam = "cmd"
+	}
+	var httpReq *http.Request
+	var err error
+	if useGET {
+		targetURL := h.buildExecURL(conn.URL, conn.Type, conn.Password, cmdParam, command)
+		httpReq, err = http.NewRequest(http.MethodGet, targetURL, nil)
+	} else {
+		body := h.buildExecBody(conn.Type, conn.Password, cmdParam, command)
+		httpReq, err = http.NewRequest(http.MethodPost, conn.URL, bytes.NewReader(body))
+		httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	if err != nil {
+		return "", false, err.Error()
+	}
+	httpReq.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Pyntra-WebShell/1.0)")
+	resp, err := h.client.Do(httpReq)
+	if err != nil {
+		return "", false, err.Error()
+	}
+	defer resp.Body.Close()
+	out, _ := io.ReadAll(resp.Body)
+	return string(out), resp.StatusCode == http.StatusOK, ""
+}
+func (h *WebShellHandler) FileOpWithConnection(conn *database.WebShellConnection, action, path, content, targetPath string) (output string, ok bool, errMsg string) {
+	if conn == nil {
+		return "", false, "connection is nil"
+	}
+	action = strings.ToLower(strings.TrimSpace(action))
+	shellType := strings.ToLower(strings.TrimSpace(conn.Type))
+	if shellType == "" {
+		shellType = "php"
+	}
+	var command string
+	switch action {
+	case "list":
+		if path == "" {
+			path = "."
+		}
+		if shellType == "asp" || shellType == "aspx" {
+			command = "dir " + h.escapePath(strings.TrimSpace(path))
+		} else {
+			command = "ls -la " + h.escapePath(strings.TrimSpace(path))
+		}
+	case "read":
+		path = strings.TrimSpace(path)
+		if path == "" {
+			return "", false, "path is required for read"
+		}
+		if shellType == "asp" || shellType == "aspx" {
+			command = "type " + h.escapePath(path)
+		} else {
+			command = "cat " + h.escapePath(path)
+		}
+	case "write":
+		path = strings.TrimSpace(path)
+		if path == "" {
+			return "", false, "path is required for write"
+		}
+		command = "echo " + h.escapeForEcho(content) + " > " + h.escapePath(path)
+	default:
+		return "", false, "unsupported action: " + action + " (supported: list, read, write)"
+	}
+	useGET := strings.ToUpper(strings.TrimSpace(conn.Method)) == "GET"
+	cmdParam := strings.TrimSpace(conn.CmdParam)
+	if cmdParam == "" {
+		cmdParam = "cmd"
+	}
+	var httpReq *http.Request
+	var err error
+	if useGET {
+		targetURL := h.buildExecURL(conn.URL, conn.Type, conn.Password, cmdParam, command)
+		httpReq, err = http.NewRequest(http.MethodGet, targetURL, nil)
+	} else {
+		body := h.buildExecBody(conn.Type, conn.Password, cmdParam, command)
+		httpReq, err = http.NewRequest(http.MethodPost, conn.URL, bytes.NewReader(body))
+		httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	if err != nil {
+		return "", false, err.Error()
+	}
+	httpReq.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Pyntra-WebShell/1.0)")
+	resp, err := h.client.Do(httpReq)
+	if err != nil {
+		return "", false, err.Error()
+	}
+	defer resp.Body.Close()
+	out, _ := io.ReadAll(resp.Body)
+	return string(out), resp.StatusCode == http.StatusOK, ""
+}

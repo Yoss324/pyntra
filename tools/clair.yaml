@@ -1,0 +1,64 @@
+name: "clair"
+command: "clair"
+enabled: false
+short_description: "Wrapper for the clair command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Container image scanning
+  - Vulnerability detection
+
+  **Use Cases：**
+  - Container security scanning
+  - Vulnerability detection
+  - CI/CD integration
+parameters:
+  - name: "image"
+    type: "string"
+    description: "Parameter for the clair tool."
+    required: true
+    flag: "--image"
+    format: "flag"
+  - name: "config"
+    type: "string"
+    description: "Parameter for the clair tool."
+    required: false
+    flag: "--config"
+    format: "flag"
+    default: "/etc/clair/config.yaml"
+  - name: "output_format"
+    type: "string"
+    description: "Parameter for the clair tool."
+    required: false
+    flag: "--format"
+    format: "flag"
+    default: "json"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

@@ -1,0 +1,55 @@
+name: "gobuster"
+command: "gobuster"
+enabled: true
+short_description: "Wrapper for the gobuster command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Directory and file discovery
+  - DNSSubdomain enumeration
+  - Virtual host discovery
+
+  **Use Cases：**
+  - Subdomain discovery
+  - Reconnaissance for penetration testing
+parameters:
+  - name: "mode"
+    type: "string"
+    description: |
+      Execution mode or subcommand.
+
+      **Note:**
+    required: false
+    default: "dir"
+    position: 0
+    format: "positional"
+    options: ["dir", "dns", "fuzz", "vhost"]
+  - name: "url"
+    type: "string"
+    description: "Target URL."
+    required: true
+    flag: "-u"
+    format: "flag"
+  - name: "wordlist"
+    type: "string"
+    description: "Path to the wordlist file."
+    required: false
+    default: "/usr/share/wordlists/dirb/common.txt"
+    flag: "-w"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

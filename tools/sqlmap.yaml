@@ -1,0 +1,101 @@
+name: "sqlmap"
+command: "sqlmap"
+enabled: true
+short_description: "Wrapper for the sqlmap command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+
+  **Notes：**
+parameters:
+  - name: "url"
+    type: "string"
+    description: |
+      Target URL.
+
+      **Format Requirements：**
+
+      **Example Values：**
+
+      **Notes：**
+      - URL must be reachable
+      - Required parameter; cannot be empty
+    required: true
+    flag: "-u"
+    format: "flag"
+  - name: "batch"
+    type: "bool"
+    description: |
+      Parameter for the sqlmap tool.
+
+      **Use Cases：**
+
+      **Notes：**
+    required: false
+    default: true
+    flag: "--batch"
+    format: "flag"
+  - name: "level"
+    type: "int"
+    description: |
+      Parameter for the sqlmap tool.
+
+
+
+      **Notes：**
+    required: false
+    default: 3
+    flag: "--level"
+    format: "combined" # --level=3
+  - name: "data"
+    type: "string"
+    description: |
+      Parameter for the sqlmap tool.
+
+      **Format：**
+
+      **Notes：**
+    required: false
+    flag: "--data"
+    format: "flag"
+  - name: "cookie"
+    type: "string"
+    description: |
+      Parameter for the sqlmap tool.
+
+      **Format：**
+
+      **Notes：**
+    required: false
+    flag: "--cookie"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

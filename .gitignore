@@ -1,0 +1,27 @@
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+/Pentest-ai
+/pyntra
+/pentest-ai
+
+# Runtime data / local DB
+/data/*.db
+/data/*.db-*
+
+# Backups & editor cruft
+*.bak
+*.tmp
+.DS_Store
+.idea/
+.vscode/
+
+# Python venv
+venv/
+.venv/
+__pycache__/
+
+# Logs
+*.log

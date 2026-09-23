@@ -1,0 +1,95 @@
+name: "responder"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import shlex
+    import subprocess
+    import sys
+    import time
+
+    interface = sys.argv[1] if len(sys.argv) > 1 else "eth0"
+    analyze = sys.argv[2].lower() == "true" if len(sys.argv) > 2 else False
+    wpad = sys.argv[3].lower() == "true" if len(sys.argv) > 3 else True
+    fingerprint = sys.argv[4].lower() == "true" if len(sys.argv) > 4 else False
+    duration = int(sys.argv[5]) if len(sys.argv) > 5 and sys.argv[5] else 300
+    extra = sys.argv[6] if len(sys.argv) > 6 else ""
+
+    cmd = ["responder", "-I", interface]
+    if analyze:
+        cmd.append("-A")
+    if wpad:
+        cmd.append("-w")
+    if fingerprint:
+        cmd.append("-f")
+    if extra:
+        cmd.extend(shlex.split(extra))
+
+    proc = subprocess.Popen(cmd)
+    try:
+        if duration > 0:
+            time.sleep(duration)
+            proc.terminate()
+            proc.wait(timeout=10)
+        else:
+            proc.wait()
+    except KeyboardInterrupt:
+        proc.terminate()
+        proc.wait(timeout=10)
+enabled: true
+short_description: "Wrapper for the responder command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+parameters:
+  - name: "interface"
+    type: "string"
+    description: "Parameter for the responder tool."
+    required: false
+    default: "eth0"
+    position: 0
+    format: "positional"
+  - name: "analyze"
+    type: "bool"
+    description: "Parameter for the responder tool."
+    required: false
+    default: false
+    position: 1
+    format: "positional"
+  - name: "wpad"
+    type: "bool"
+    description: "Parameter for the responder tool."
+    required: false
+    default: true
+    position: 2
+    format: "positional"
+  - name: "fingerprint"
+    type: "bool"
+    description: "Parameter for the responder tool."
+    required: false
+    default: false
+    position: 3
+    format: "positional"
+  - name: "duration"
+    type: "int"
+    description: "Parameter for the responder tool."
+    required: false
+    default: 300
+    position: 4
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    default: ""
+    position: 5
+    format: "positional"

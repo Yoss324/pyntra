@@ -1,0 +1,112 @@
+name: "api-fuzzer"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import pathlib
+    import sys
+    import textwrap
+    from urllib.parse import urljoin
+
+    import requests
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    base_url = sys.argv[1]
+    endpoints_arg = sys.argv[2] if len(sys.argv) > 2 else ""
+    methods_arg = sys.argv[3] if len(sys.argv) > 3 else "GET,POST"
+    wordlist_path = sys.argv[4] if len(sys.argv) > 4 else ""
+    timeout = float(sys.argv[5]) if len(sys.argv) > 5 and sys.argv[5] else 10.0
+
+    methods = [m.strip().upper() for m in methods_arg.split(",") if m.strip()]
+    if not methods:
+        methods = ["GET"]
+
+    endpoints = []
+    if endpoints_arg:
+        endpoints = [ep.strip() for ep in endpoints_arg.split(",") if ep.strip()]
+    elif wordlist_path:
+        path = pathlib.Path(wordlist_path)
+        if not path.is_file():
+            sys.exit(1)
+        endpoints = [line.strip() for line in path.read_text().splitlines() if line.strip()]
+
+    if not endpoints:
+        sys.exit(1)
+
+    results = []
+    for endpoint in endpoints:
+        url = urljoin(base_url.rstrip("/") + "/", endpoint.lstrip("/"))
+        for method in methods:
+            try:
+                resp = requests.request(method, url, timeout=timeout, allow_redirects=False)
+                results.append({
+                    "method": method,
+                    "endpoint": endpoint,
+                    "status": resp.status_code,
+                    "length": len(resp.content),
+                    "redirect": resp.headers.get("Location", "")
+                })
+            except requests.RequestException as exc:
+                results.append({
+                    "method": method,
+                    "endpoint": endpoint,
+                    "error": str(exc)
+                })
+
+    for item in results:
+        if "error" in item:
+            print(f"[{item['method']}] {item['endpoint']} -> ERROR: {item['error']}")
+        else:
+            redirect = f" -> {item['redirect']}" if item.get("redirect") else ""
+            print(f"[{item['method']}] {item['endpoint']} -> {item['status']} ({item['length']} bytes){redirect}")
+enabled: true
+short_description: "Wrapper for the api-fuzzer command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+parameters:
+  - name: "base_url"
+    type: "string"
+    description: "Target URL."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "endpoints"
+    type: "string"
+    description: "Comma-separated list of endpoints."
+    required: false
+    default: ""
+    position: 1
+    format: "positional"
+  - name: "methods"
+    type: "string"
+    description: "Comma-separated HTTP methods to use."
+    required: false
+    default: "GET,POST"
+    position: 2
+    format: "positional"
+  - name: "wordlist"
+    type: "string"
+    description: "Path to the wordlist file."
+    required: false
+    default: "/usr/share/wordlists/api/api-endpoints.txt"
+    position: 3
+    format: "positional"
+  - name: "timeout"
+    type: "string"
+    description: "Timeout in seconds."
+    required: false
+    default: "10"
+    position: 4
+    format: "positional"

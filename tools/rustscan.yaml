@@ -1,0 +1,144 @@
+name: "rustscan"
+command: "rustscan"
+enabled: true
+short_description: "Wrapper for the rustscan command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+
+parameters:
+  # -a, --addresses
+  - name: "target"
+    type: "string"
+    description: |
+      Target host or address.
+    required: true
+    flag: "-a"
+    format: "flag"
+
+  - name: "ports"
+    type: "string"
+    description: |
+      Target port or comma-separated list of ports.
+    required: false
+    flag: "-p"
+    format: "flag"
+
+  - name: "range"
+    type: "string"
+    description: |
+      Parameter for the rustscan tool.
+    required: false
+    flag: "-r"
+    format: "flag"
+
+  # -u, --ulimit
+  - name: "ulimit"
+    type: "int"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "-u"
+    format: "flag"
+    default: 5000
+
+  - name: "scripts"
+    type: "string"
+    description: |
+      Parameter for the rustscan tool.
+    required: false
+    flag: "--scripts"
+    format: "flag"
+    default: "none"
+    options:
+      - "none"
+      - "default"
+      - "custom"
+
+  - name: "greppable"
+    type: "bool"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "-g"
+    format: "flag"
+    default: false
+
+  # -b, --batch-size [default: 4500]
+  - name: "batch_size"
+    type: "int"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "-b"
+    format: "flag"
+
+  # -t, --timeout ms [default: 1500]
+  - name: "timeout_ms"
+    type: "int"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "-t"
+    format: "flag"
+
+  # --scan-order serial | random [default: serial]
+  - name: "scan_order"
+    type: "string"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "--scan-order"
+    format: "flag"
+    options:
+      - "serial"
+      - "random"
+
+  - name: "top_ports"
+    type: "bool"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "--top"
+    format: "flag"
+    default: false
+
+  # -e, --exclude-ports
+  - name: "exclude_ports"
+    type: "string"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "-e"
+    format: "flag"
+
+  # -x, --exclude-addresses
+  - name: "exclude_addresses"
+    type: "string"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "-x"
+    format: "flag"
+
+  # --tries [default: 1]
+  - name: "tries"
+    type: "int"
+    description: "Parameter for the rustscan tool."
+    required: false
+    flag: "--tries"
+    format: "flag"
+
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+    required: false
+    format: "positional"

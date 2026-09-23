@@ -1,0 +1,200 @@
+(function () {
+ const DEFAULT_LANG = 'en-US';
+ const STORAGE_KEY = 'csai_lang';
+ const RESOURCES_PREFIX = '/static/i18n';
+
+ const loadedLangs = {};
+ let i18nReadyResolve;
+ window.i18nReady = new Promise(function (resolve) {
+ i18nReadyResolve = resolve;
+ });
+
+ function detectInitialLang() {
+ // English-only build.
+ return 'en-US';
+ }
+
+ async function loadLanguageResources(lang) {
+ if (loadedLangs[lang]) {
+ return;
+ }
+ try {
+ const resp = await fetch(RESOURCES_PREFIX + '/' + lang + '.json', {
+ cache: 'no-cache'
+ });
+ if (!resp.ok) {
+ console.warn('loadfailed:', lang, resp.status);
+ return;
+ }
+ const data = await resp.json();
+ if (typeof i18next !== 'undefined') {
+ i18next.addResourceBundle(lang, 'translation', data, true, true);
+ }
+ loadedLangs[lang] = true;
+ } catch (e) {
+ console.error('load:', lang, e);
+ }
+ }
+
+ function applyTranslations(root) {
+ if (typeof i18next === 'undefined') return;
+ const container = root || document;
+ if (!container) return;
+
+ const elements = container.querySelectorAll('[data-i18n]');
+ elements.forEach(function (el) {
+ const key = el.getAttribute('data-i18n');
+ if (!key) return;
+ const skipText = el.getAttribute('data-i18n-skip-text') === 'true';
+ const isFormControl = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+ const attrList = el.getAttribute('data-i18n-attr');
+ const text = i18next.t(key);
+ const hasNoElementChildren = !el.querySelector('*');
+ if (!skipText && !isFormControl && hasNoElementChildren && text && typeof text === 'string') {
+ el.textContent = text;
+ }
+
+ if (attrList) {
+ const titleKey = el.getAttribute('data-i18n-title');
+ attrList.split(',').map(function (s) { return s.trim(); }).forEach(function (attr) {
+ if (!attr) return;
+ var val = text;
+ if (attr === 'title' && titleKey) {
+ var titleText = i18next.t(titleKey);
+ if (titleText && typeof titleText === 'string') val = titleText;
+ }
+ if (val && typeof val === 'string') {
+ el.setAttribute(attr, val);
+ }
+ });
+ }
+ });
+ try {
+ const chatInput = document.getElementById('chat-input');
+ if (chatInput && chatInput.tagName === 'TEXTAREA') {
+ const ph = (chatInput.getAttribute('placeholder') || '').trim();
+ if (ph && chatInput.value.trim() === ph) {
+ chatInput.value = '';
+ }
+ }
+ } catch (e) { /* ignore */ }
+ try {
+ if (document && document.documentElement) {
+ document.documentElement.lang = i18next.language || DEFAULT_LANG;
+ }
+ } catch (e) {
+ // ignore
+ }
+ }
+
+ function updateLangLabel() {
+ const label = document.getElementById('current-lang-label');
+ if (!label || typeof i18next === 'undefined') return;
+ const lang = (i18next.language || DEFAULT_LANG).toLowerCase();
+ if (lang.indexOf('zh') === 0) {
+ label.textContent = i18next.t('lang.zhCN');
+ } else {
+ label.textContent = i18next.t('lang.enUS');
+ }
+ }
+
+ function closeLangDropdown() {
+ const dropdown = document.getElementById('lang-dropdown');
+ if (dropdown) {
+ dropdown.style.display = 'none';
+ }
+ }
+
+ function handleGlobalClickForLangDropdown(ev) {
+ const dropdown = document.getElementById('lang-dropdown');
+ const btn = document.querySelector('.lang-switcher-btn');
+ if (!dropdown || dropdown.style.display !== 'block') return;
+ const target = ev.target;
+ if (btn && btn.contains(target)) {
+ return;
+ }
+ if (!dropdown.contains(target)) {
+ closeLangDropdown();
+ }
+ }
+
+ async function changeLanguage(lang) {
+ if (typeof i18next === 'undefined') return;
+ const current = i18next.language || DEFAULT_LANG;
+ if (lang === current) return;
+ await loadLanguageResources(lang);
+ await i18next.changeLanguage(lang);
+ try {
+ localStorage.setItem(STORAGE_KEY, lang);
+ } catch (e) {
+ console.warn('save:', e);
+ }
+ applyTranslations(document);
+ updateLangLabel();
+ try {
+ window.__locale = lang;
+ } catch (e) { /* ignore */ }
+ try {
+ document.dispatchEvent(new CustomEvent('languagechange', { detail: { lang: lang } }));
+ } catch (e) { /* ignore */ }
+ }
+
+ async function initI18n() {
+ if (typeof i18next === 'undefined') {
+ console.warn('i18next load,initialize');
+ if (typeof i18nReadyResolve === 'function') i18nReadyResolve();
+ return;
+ }
+
+ const initialLang = detectInitialLang();
+ await i18next.init({
+ lng: initialLang,
+ fallbackLng: DEFAULT_LANG,
+ debug: false,
+ resources: {}
+ });
+
+ await loadLanguageResources(initialLang);
+ applyTranslations(document);
+ updateLangLabel();
+ try {
+ window.__locale = i18next.language || initialLang;
+ } catch (e) { /* ignore */ }
+ window.t = function (key, opts) {
+ if (typeof i18next === 'undefined') return key;
+ return i18next.t(key, opts);
+ };
+ window.changeLanguage = changeLanguage;
+ window.applyTranslations = applyTranslations;
+ window.toggleLangDropdown = function () {
+ const dropdown = document.getElementById('lang-dropdown');
+ if (!dropdown) return;
+ if (dropdown.style.display === 'block') {
+ dropdown.style.display = 'none';
+ } else {
+ dropdown.style.display = 'block';
+ }
+ };
+ window.onLanguageSelect = function (lang) {
+ changeLanguage(lang);
+ closeLangDropdown();
+ };
+
+ document.addEventListener('click', handleGlobalClickForLangDropdown);
+ try {
+ if (typeof refreshSystemReadyMessageBubbles === 'function') {
+ refreshSystemReadyMessageBubbles();
+ }
+ } catch (e) { /* ignore */ }
+
+ if (typeof i18nReadyResolve === 'function') i18nReadyResolve();
+ }
+
+ document.addEventListener('DOMContentLoaded', function () {
+ initI18n().catch(function (e) {
+ console.error('initializefailed:', e);
+ if (typeof i18nReadyResolve === 'function') i18nReadyResolve();
+ });
+ });
+})();
+

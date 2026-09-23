@@ -1,0 +1,84 @@
+name: "nmap"
+command: "nmap"
+args: ["-sT", "-sV", "-sC"]
+enabled: true
+short_description: "Wrapper for the nmap command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+
+
+   **Notes:**
+parameters:
+  - name: "target"
+    type: "string"
+    description: |
+      Target host or address.
+
+      **Examples:** `192.168.1.1`、`10.0.0.0/24`、`example.com`
+    required: true
+    position: 1
+    format: "positional"
+  - name: "ports"
+    type: "string"
+    description: |
+      Target port or comma-separated list of ports.
+    required: false
+    flag: "-p"
+    format: "flag"
+  - name: "timing"
+    type: "string"
+    description: "Parameter for the nmap tool."
+    required: false
+    format: "template"
+    template: "-T{value}"
+  - name: "nse_scripts"
+    type: "string"
+    description: "Parameter for the nmap tool."
+    required: false
+    flag: "--script"
+    format: "flag"
+  - name: "os_detection"
+    type: "bool"
+    description: |
+      Parameter for the nmap tool.
+    required: false
+    flag: "-O"
+    format: "flag"
+    default: false
+  - name: "aggressive"
+    type: "bool"
+    description: |
+      Parameter for the nmap tool.
+    required: false
+    flag: "-A"
+    format: "flag"
+    default: false
+  - name: "scan_type"
+    type: "string"
+    description: |
+      Parameter for the nmap tool.
+    required: false
+    format: "template"
+    template: "{value}"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+    required: false
+    format: "positional"

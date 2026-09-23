@@ -1,0 +1,88 @@
+name: "anew"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import shlex
+    import subprocess
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    input_data = sys.argv[1]
+    output_file = sys.argv[2] if len(sys.argv) > 2 else ""
+    additional = sys.argv[3] if len(sys.argv) > 3 else ""
+
+    cmd = ["anew"]
+    if additional:
+        cmd.extend(shlex.split(additional))
+    if output_file:
+        cmd.append(output_file)
+
+    proc = subprocess.run(
+        cmd,
+        input=input_data.encode("utf-8"),
+        capture_output=True,
+        text=True,
+    )
+
+    if proc.returncode != 0:
+        sys.stderr.write(proc.stderr or proc.stdout)
+        sys.exit(proc.returncode)
+
+    sys.stdout.write(proc.stdout)
+enabled: true
+short_description: "Wrapper for the anew command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Fast processing
+
+  **Use Cases：**
+  - Toolchain integration
+parameters:
+  - name: "input_data"
+    type: "string"
+    description: "Parameter for the anew tool."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "output_file"
+    type: "string"
+    description: "Parameter for the anew tool."
+    required: false
+    default: ""
+    position: 1
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    default: ""
+    position: 2
+    format: "positional"

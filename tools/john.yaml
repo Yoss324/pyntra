@@ -1,0 +1,50 @@
+name: "john"
+command: "john"
+enabled: true
+short_description: "Wrapper for the john command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Dictionary attacks
+  - Brute-force attacks
+  - Rule engine
+
+  **Use Cases：**
+  - Security testing
+  - Forensics analysis
+parameters:
+  - name: "hash_file"
+    type: "string"
+    description: "Parameter for the john tool."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "wordlist"
+    type: "string"
+    description: "Path to the wordlist file."
+    required: false
+    default: "/usr/share/wordlists/rockyou.txt"
+    flag: "--wordlist"
+    format: "flag"
+  - name: "format_type"
+    type: "string"
+    description: "Parameter for the john tool."
+    required: false
+    flag: "--format"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

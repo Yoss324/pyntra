@@ -1,0 +1,50 @@
+name: "subfinder"
+command: "subfinder"
+enabled: true
+short_description: "Wrapper for the subfinder command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Fast scanning
+
+  **Use Cases：**
+  - Subdomain enumeration
+  - Asset discovery
+  - Reconnaissance for penetration testing
+parameters:
+  - name: "domain"
+    type: "string"
+    description: "Target domain name."
+    required: true
+    flag: "-d"
+    format: "flag"
+  - name: "silent"
+    type: "bool"
+    description: "Parameter for the subfinder tool."
+    required: false
+    default: true
+    flag: "-silent"
+    format: "flag"
+  - name: "all_sources"
+    type: "bool"
+    description: "Parameter for the subfinder tool."
+    required: false
+    default: false
+    flag: "-all"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

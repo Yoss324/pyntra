@@ -1,0 +1,89 @@
+name: "zap"
+command: "zap-cli"
+enabled: false
+short_description: "Wrapper for the zap command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Detailed reports
+
+  **Use Cases：**
+  - Vulnerability scanning
+  - Security assessment
+  - Penetration testing
+parameters:
+  - name: "target"
+    type: "string"
+    description: "Target host or address."
+    required: true
+    flag: "-t"
+    format: "flag"
+  - name: "scan_type"
+    type: "string"
+    description: "Parameter for the zap tool."
+    required: false
+    flag: "--scan-type"
+    format: "flag"
+    default: "baseline"
+  - name: "api_key"
+    type: "string"
+    description: "Parameter for the zap tool."
+    required: false
+    flag: "--api-key"
+    format: "flag"
+  - name: "daemon"
+    type: "bool"
+    description: "Parameter for the zap tool."
+    required: false
+    flag: "--daemon"
+    format: "flag"
+    default: false
+  - name: "port"
+    type: "string"
+    description: "Target port or comma-separated list of ports."
+    required: false
+    flag: "--port"
+    format: "flag"
+    default: "8090"
+  - name: "format_type"
+    type: "string"
+    description: "Parameter for the zap tool."
+    required: false
+    flag: "--format"
+    format: "flag"
+    default: "xml"
+  - name: "output_file"
+    type: "string"
+    description: "Parameter for the zap tool."
+    required: false
+    flag: "--output"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

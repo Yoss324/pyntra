@@ -1,0 +1,66 @@
+name: "gdb-peda"
+command: "gdb"
+enabled: true
+short_description: "Wrapper for the gdb-peda command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+  - Exploit development
+  - Reverse engineering
+  - Security research
+parameters:
+  - name: "binary"
+    type: "string"
+    description: "Whether the content is Base64-encoded binary data."
+    required: false
+    position: 0
+    format: "positional"
+  - name: "commands"
+    type: "string"
+    description: "Parameter for the gdb-peda tool."
+    required: false
+    flag: "-ex"
+    format: "flag"
+  - name: "attach_pid"
+    type: "int"
+    description: "Parameter for the gdb-peda tool."
+    required: false
+    flag: "-p"
+    format: "flag"
+  - name: "core_file"
+    type: "string"
+    description: "Parameter for the gdb-peda tool."
+    required: false
+    flag: "-c"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

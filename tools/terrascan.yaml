@@ -1,0 +1,77 @@
+name: "terrascan"
+command: "terrascan"
+enabled: true
+short_description: "Wrapper for the terrascan command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - IaC security scanning
+  - Compliance validation
+
+  **Use Cases：**
+  - IaC security scanning
+  - Cloud configuration auditing
+  - Compliance checks
+parameters:
+  - name: "scan_type"
+    type: "string"
+    description: "Parameter for the terrascan tool."
+    required: false
+    flag: "--scan-type"
+    format: "flag"
+    default: "all"
+  - name: "iac_dir"
+    type: "string"
+    description: "Parameter for the terrascan tool."
+    required: false
+    flag: "-d"
+    format: "flag"
+    default: "."
+  - name: "policy_type"
+    type: "string"
+    description: "Parameter for the terrascan tool."
+    required: false
+    flag: "--policy-type"
+    format: "flag"
+  - name: "output_format"
+    type: "string"
+    description: "Parameter for the terrascan tool."
+    required: false
+    flag: "--output"
+    format: "flag"
+    default: "json"
+  - name: "severity"
+    type: "string"
+    description: "Parameter for the terrascan tool."
+    required: false
+    flag: "--severity"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

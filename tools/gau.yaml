@@ -1,0 +1,59 @@
+name: "gau"
+command: "gau"
+enabled: true
+short_description: "Wrapper for the gau command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+  - Security testing
+parameters:
+  - name: "domain"
+    type: "string"
+    description: "Target domain name."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "providers"
+    type: "string"
+    description: "Parameter for the gau tool."
+    required: false
+    flag: "-providers"
+    format: "flag"
+  - name: "include_subs"
+    type: "bool"
+    description: "Parameter for the gau tool."
+    required: false
+    flag: "-subs"
+    format: "flag"
+    default: true
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - "-o output.txt": write output to a file
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

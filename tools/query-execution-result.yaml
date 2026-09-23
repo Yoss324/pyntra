@@ -1,0 +1,100 @@
+name: "query_execution_result"
+command: "internal:query_execution_result"
+enabled: true
+short_description: "Wrapper for the query_execution_result command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+
+  **Workflow：**
+  1. After a tool run completes, the system stores oversized results and returns an execution ID.
+  2. Use this tool to query the stored result by `execution_id`.
+  3. You can page through, search, and filter the stored result.
+
+  **Notes：**
+
+parameters:
+  - name: "execution_id"
+    type: "string"
+    description: |
+      Parameter for the query_execution_result tool.
+
+      **Format Requirements：**
+      - Required parameter; cannot be empty
+
+      **Example Values：**
+      - "exec_12345"
+      - "550e8400-e29b-41d4-a716-446655440000"
+
+
+      **Notes：**
+    required: true
+    format: "positional"
+    position: 0
+
+  - name: "page"
+    type: "integer"
+    description: |
+      Results page number.
+
+      **Format Requirements：**
+
+      **Example Values：**
+
+      **Notes：**
+    required: false
+    default: 1
+
+  - name: "limit"
+    type: "integer"
+    description: |
+      Parameter for the query_execution_result tool.
+
+      **Format Requirements：**
+
+      **Example Values：**
+
+      **Notes：**
+    required: false
+    default: 100
+
+  - name: "search"
+    type: "string"
+    description: |
+      Parameter for the query_execution_result tool.
+
+      **Format Requirements：**
+
+      **Example Values：**
+
+      **Use Cases：**
+
+      **Notes：**
+    required: false
+
+  - name: "filter"
+    type: "string"
+    description: |
+      Parameter for the query_execution_result tool.
+
+      **Format Requirements：**
+
+      **Example Values：**
+
+      **Use Cases：**
+
+      **Notes：**
+    required: false

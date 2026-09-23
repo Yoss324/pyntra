@@ -1,0 +1,85 @@
+name: "hash-identifier"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import shlex
+    import subprocess
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    hash_value = sys.argv[1]
+    extra = sys.argv[2] if len(sys.argv) > 2 else ""
+
+    cmd = ["hash-identifier"]
+    if extra:
+        cmd.extend(shlex.split(extra))
+
+    proc = subprocess.run(
+        cmd,
+        input=f"{hash_value}\n",
+        capture_output=True,
+        text=True,
+    )
+
+    if proc.returncode != 0:
+        sys.stderr.write(proc.stderr or proc.stdout)
+        sys.exit(proc.returncode)
+
+    sys.stdout.write(proc.stdout)
+enabled: true
+short_description: "Wrapper for the hash-identifier command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  - MD5
+  - SHA1, SHA256, SHA512
+  - bcrypt
+  - NTLM
+  - MySQL
+  - PostgreSQL
+
+  **Use Cases：**
+
+  **Notes：**
+parameters:
+  - name: "hash"
+    type: "string"
+    description: "Parameter for the hash-identifier tool."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    default: ""
+    position: 1
+    format: "positional"

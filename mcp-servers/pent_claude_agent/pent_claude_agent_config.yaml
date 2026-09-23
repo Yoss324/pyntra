@@ -1,0 +1,46 @@
+# pent_claude_agent config file
+# Penetration testing Agent config, MCP/tool/
+# path:${PROJECT_ROOT} = Pyntra directory,${SCRIPT_DIR} = directory
+
+# directory(Agent Tasks cwd)
+cwd: "${PROJECT_ROOT}/mcp-servers/pent_claude_agent"
+
+# Agent tool
+allowed_tools:
+ - Read
+ - Write
+ - Bash
+ - Grep
+ - Glob
+
+# disabledtool()
+# disallowed_tools: []
+
+# Claude Agent MCP config(pent_claude_agent MCP)
+# :reverse_shell/tool MCP 
+mcp_servers:
+ # Examples: reverse_shell,Agent call Shell tool
+ # reverse-shell:
+ # command: "${PROJECT_ROOT}/venv/bin/python3"
+ # args:
+ # - "${PROJECT_ROOT}/mcp-servers/reverse_shell/mcp_reverse_shell.py"
+
+# (API Key ,pent_claude_agent config,)
+env:
+ ANTHROPIC_API_KEY: "sk-xxx" # API Key
+ ANTHROPIC_MODEL: "qwen3.5-plus"
+ ANTHROPIC_BASE_URL: "https://api.anthropic.com"
+ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+ DISABLE_TELEMETRY: "1"
+ DISABLE_ERROR_REPORTING: "1"
+ DISABLE_BUG_COMMAND: "1"
+
+# hint(Penetration testing)
+system_prompt: |
+ Penetration testing.Tasks,Security testing/Vulnerabilities/Recon.
+ ,output/result.,.
+
+# load Skills (user=directory, project=directory, local=)
+setting_sources:
+ - user
+ - project

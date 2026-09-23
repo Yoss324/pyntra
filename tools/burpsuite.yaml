@@ -1,0 +1,61 @@
+name: "burpsuite"
+command: "burpsuite"
+enabled: true
+short_description: "Wrapper for the burpsuite command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Vulnerability scanning
+
+  **Use Cases：**
+  - Penetration testing
+  - Vulnerability scanning
+  - Security assessment
+parameters:
+  - name: "project_file"
+    type: "string"
+    description: "Parameter for the burpsuite tool."
+    required: false
+    flag: "--project-file"
+    format: "flag"
+  - name: "config_file"
+    type: "string"
+    description: "Parameter for the burpsuite tool."
+    required: false
+    flag: "--config-file"
+    format: "flag"
+  - name: "user_config_file"
+    type: "string"
+    description: "Parameter for the burpsuite tool."
+    required: false
+    flag: "--user-config-file"
+    format: "flag"
+  - name: "headless"
+    type: "bool"
+    description: "Parameter for the burpsuite tool."
+    required: false
+    flag: "--headless"
+    format: "flag"
+    default: false
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+    required: false
+    format: "positional"

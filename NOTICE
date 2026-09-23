@@ -1,0 +1,16 @@
+Pyntra
+Copyright 2026 The Pyntra Authors
+
+This product is a derivative work based on an upstream project licensed under
+the Apache License, Version 2.0.
+
+In accordance with Section 4 of the Apache License 2.0, the following changes
+have been made relative to the original work:
+
+  - Rebranded the product and Go module to "Pyntra".
+  - Removed upstream project branding, logos, and community/marketing links.
+  - Migrated the default model configuration to a local Ollama setup.
+  - Redesigned the web console UI and added new features.
+
+The original Apache License 2.0 text is retained in the LICENSE file. Original
+copyright notices, where present in individual source files, are retained.

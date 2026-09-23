@@ -1,0 +1,68 @@
+name: "trivy"
+command: "trivy"
+enabled: true
+short_description: "Wrapper for the trivy command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Container image scanning
+
+  **Use Cases：**
+  - Container security scanning
+  - CI/CD integration
+  - Vulnerability detection
+parameters:
+  - name: "scan_type"
+    type: "string"
+    description: "Parameter for the trivy tool."
+    required: false
+    default: "image"
+    position: 0
+    format: "positional"
+  - name: "target"
+    type: "string"
+    description: "Target host or address."
+    required: true
+    position: 1
+    format: "positional"
+  - name: "severity"
+    type: "string"
+    description: "Parameter for the trivy tool."
+    required: false
+    flag: "--severity"
+    format: "flag"
+  - name: "output_format"
+    type: "string"
+    description: "Parameter for the trivy tool."
+    required: false
+    flag: "--format"
+    format: "flag"
+    default: "json"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

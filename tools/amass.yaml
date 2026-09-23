@@ -1,0 +1,45 @@
+name: "amass"
+command: "amass"
+enabled: true
+short_description: "Wrapper for the amass command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+  - Subdomain discovery
+  - Asset discovery
+  - Reconnaissance for penetration testing
+parameters:
+  - name: "mode"
+    type: "string"
+    description: |
+      Execution mode or subcommand.
+
+    required: false
+    default: "enum"
+    position: 0
+    format: "positional"
+    options: ["enum", "intel", "viz"]
+  - name: "domain"
+    type: "string"
+    description: "Target domain name."
+    required: true
+    flag: "-d"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

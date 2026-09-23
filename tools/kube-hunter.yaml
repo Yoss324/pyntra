@@ -1,0 +1,74 @@
+name: "kube-hunter"
+command: "kube-hunter"
+enabled: true
+short_description: "Wrapper for the kube-hunter command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Vulnerability discovery
+
+  **Use Cases：**
+  - KubernetesSecurity testing
+  - Penetration testing
+parameters:
+  - name: "target"
+    type: "string"
+    description: "Target host or address."
+    required: false
+    flag: "--remote"
+    format: "flag"
+  - name: "cidr"
+    type: "string"
+    description: "Parameter for the kube-hunter tool."
+    required: false
+    flag: "--cidr"
+    format: "flag"
+  - name: "interface"
+    type: "string"
+    description: "Parameter for the kube-hunter tool."
+    required: false
+    flag: "--interface"
+    format: "flag"
+  - name: "active"
+    type: "bool"
+    description: "Parameter for the kube-hunter tool."
+    required: false
+    flag: "--active"
+    format: "flag"
+    default: false
+  - name: "report"
+    type: "string"
+    description: "Parameter for the kube-hunter tool."
+    required: false
+    flag: "--report"
+    format: "flag"
+    default: "json"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

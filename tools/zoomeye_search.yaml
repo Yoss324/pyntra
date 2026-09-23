@@ -1,0 +1,283 @@
+name: "zoomeye_search"
+command: "python3"
+args:
+  - "-c"
+  - |
+ import sys
+ import json
+ import base64
+ import requests
+ import os
+
+ ZOOMEYE_API_KEY = "" # ZoomEye API
+ # ==================================================
+
+ base_url = "https://api.zoomeye.org/v2/search"
+
+ # Parse arguments (from a JSON string or command-line arguments)
+ def parse_args():
+ # Try reading JSON configuration from the first argument
+ if len(sys.argv) > 1:
+ try:
+ # Ensure sys.argv[1] is a string
+ arg1 = str(sys.argv[1])
+ # Try parsing JSON
+ config = json.loads(arg1)
+ # Ensure the returned value is a dictionary
+ if isinstance(config, dict):
+ return config
+ except (json.JSONDecodeError, TypeError, ValueError):
+ # If the value is not JSON, fall back to positional arguments
+ pass
+
+ # Legacy positional arguments (backward compatible)
+ config = {}
+ if len(sys.argv) > 1:
+ config['query'] = str(sys.argv[1])
+ if len(sys.argv) > 2:
+ try:
+ config['page'] = int(sys.argv[2])
+ except (ValueError, TypeError):
+ pass
+ if len(sys.argv) > 3:
+ try:
+ config['pagesize'] = int(sys.argv[3])
+ except (ValueError, TypeError):
+ pass
+ if len(sys.argv) > 4:
+ config['fields'] = str(sys.argv[4])
+ if len(sys.argv) > 5:
+ config['sub_type'] = str(sys.argv[5])
+ return config
+
+ try:
+ config = parse_args()
+
+ # Ensure config is a dictionary
+ if not isinstance(config, dict):
+ error_result = {
+ "status": "error",
+ "message": f"Argument parsing error: expected a dictionary, got {type(config).__name__}",
+ "type": "TypeError"
+ }
+ print(json.dumps(error_result, ensure_ascii=False, indent=2))
+ sys.exit(1)
+
+ api_key = os.getenv('ZOOMEYE_API_KEY', ZOOMEYE_API_KEY).strip()
+ query = config.get('query', '').strip()
+
+ if not api_key:
+ error_result = {
+ "status": "error",
+ "required_config": ["api_key"],
+ }
+ print(json.dumps(error_result, ensure_ascii=False, indent=2))
+ sys.exit(1)
+
+ if not query:
+ error_result = {
+ "status": "error",
+ "message": "Missing required parameter: query",
+ "required_params": ["query"],
+ "examples": [
+ 'app:"Apache"',
+ 'title:"login"',
+ 'domain:"example.com"',
+ 'ip:"1.1.1.1"',
+ 'port:80',
+ 'country:"CN"',
+ 'city:"Beijing"'
+ ]
+ }
+ print(json.dumps(error_result, ensure_ascii=False, indent=2))
+ sys.exit(1)
+
+ data = {
+ 'qbase64': base64.b64encode(query.encode('utf-8')).decode('utf-8')
+ }
+
+ # Optional parameters
+ if 'page' in config and config['page'] is not None:
+ try:
+ page = int(config['page'])
+ if page > 0:
+ data['page'] = page
+ except (ValueError, TypeError):
+ pass
+
+ if 'pagesize' in config and config['pagesize'] is not None:
+ try:
+ pagesize = int(config['pagesize'])
+ if pagesize > 0 and pagesize <= 10000:
+ data['pagesize'] = pagesize
+ except (ValueError, TypeError):
+ pass
+
+ if 'fields' in config and config['fields']:
+ data['fields'] = str(config['fields']).strip()
+
+ if 'sub_type' in config and config['sub_type']:
+ sub_type = str(config['sub_type']).strip().lower()
+ if sub_type in ('v4', 'v6', 'web'):
+ data['sub_type'] = sub_type
+
+ if 'facets' in config and config['facets']:
+ data['facets'] = str(config['facets']).strip()
+
+ if 'ignore_cache' in config and config['ignore_cache'] is not None:
+ ignore_cache_val = config['ignore_cache']
+ if isinstance(ignore_cache_val, bool):
+ data['ignore_cache'] = ignore_cache_val
+ elif isinstance(ignore_cache_val, str):
+ data['ignore_cache'] = ignore_cache_val.lower() in ('true', '1', 'yes')
+ elif isinstance(ignore_cache_val, (int, float)):
+ data['ignore_cache'] = ignore_cache_val != 0
+
+ headers = {
+ 'API-KEY': api_key,
+ 'Content-Type': 'application/json'
+ }
+
+ try:
+ response = requests.post(base_url, json=data, headers=headers, timeout=30)
+ response.raise_for_status()
+
+ result_data = response.json()
+
+ if result_data.get('code') != 60000:
+ error_code = result_data.get('code', 'unknown')
+ error_msg = result_data.get('message', 'Unknown error')
+ error_result = {
+ "status": "error",
+ "error_code": error_code,
+ }
+ print(json.dumps(error_result, ensure_ascii=False, indent=2))
+ sys.exit(1)
+
+ data_list = result_data.get('data', [])
+ output = {
+ "status": "success",
+ "query": result_data.get('query', query),
+ "total": result_data.get('total', 0),
+ "page": result_data.get('page', 1),
+ "pagesize": result_data.get('pagesize', 10),
+ "results_count": len(data_list),
+ "results": data_list,
+ "message": f"Successfully retrieved {len(data_list)} results"
+ }
+
+ print(json.dumps(output, ensure_ascii=False, indent=2))
+
+ except requests.exceptions.RequestException as e:
+ error_result = {
+ "status": "error",
+ "message": f"Request failed: {str(e)}",
+ }
+ print(json.dumps(error_result, ensure_ascii=False, indent=2))
+ sys.exit(1)
+
+ except Exception as e:
+ error_result = {
+ "status": "error",
+ "message": f"Execution error: {str(e)}",
+ "type": type(e).__name__
+ }
+ print(json.dumps(error_result, ensure_ascii=False, indent=2))
+ sys.exit(1)
+enabled: false
+short_description: "Wrapper for the zoomeye_search command"
+description: |
+ Wrapper for the $toolName command or embedded helper script.
+
+ **Key Features:**
+ - Structured parameters for repeatable execution
+ - Suitable for security testing and automation workflows
+ - Returns command output for further orchestration
+
+ **Use Cases:**
+ - Targeted validation and assessment tasks
+ - Repeatable command execution from the agent runtime
+ - Evidence collection in larger workflows
+
+ **Key Features:**
+
+ **Use Cases:**
+
+ **Notes:**
+parameters:
+ - name: "query"
+ type: "string"
+ description: |
+ Search or query expression.
+
+ Examples:
+ - app="Apache"
+ - title="login"
+ - domain="example.com"
+ - ip="1.1.1.1"
+ - port=80
+ - country="CN"
+ - app="Apache" && country="CN"
+ - service="ssh" || service="http"
+ - port=80 && service="http"
+ required: true
+ position: 1
+ format: "positional"
+ - name: "page"
+ type: "int"
+ description: |
+ Results page number.
+
+ Page number to return. Starts at 1. Default: 1.
+ Use for paginating large result sets.
+ required: false
+ position: 2
+ format: "positional"
+ default: 1
+ - name: "pagesize"
+ type: "int"
+ description: |
+ Parameter for the zoomeye_search tool.
+
+ Allowed range: 1-10000, subject to account limits.
+ required: false
+ position: 3
+ format: "positional"
+ default: 5
+ - name: "fields"
+ type: "string"
+ description: |
+ Fields to request from the remote service.
+
+ Fields to return, separated by commas.
+ Default fields: ip,port,domain,update_time
+ required: false
+ position: 4
+ format: "positional"
+ default: "ip,port,domain,update_time"
+ - name: "sub_type"
+ type: "string"
+ description: |
+ Parameter for the zoomeye_search tool.
+
+ required: false
+ position: 5
+ format: "positional"
+ default: "v4"
+ - name: "facets"
+ type: "string"
+ description: |
+ Parameter for the zoomeye_search tool.
+
+ required: false
+ position: 6
+ format: "positional"
+ - name: "ignore_cache"
+ type: "bool"
+ description: |
+ Parameter for the zoomeye_search tool.
+
+ required: false
+ position: 7
+ format: "positional"
+ default: false

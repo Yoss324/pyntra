@@ -1,0 +1,61 @@
+name: "hashcat"
+command: "hashcat"
+enabled: true
+short_description: "Wrapper for the hashcat command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Rule engine
+
+  **Use Cases：**
+  - Security testing
+  - Forensics analysis
+parameters:
+  - name: "hash_file"
+    type: "string"
+    description: "Parameter for the hashcat tool."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "hash_type"
+    type: "string"
+    description: "Parameter for the hashcat tool."
+    required: true
+    flag: "-m"
+    format: "flag"
+  - name: "attack_mode"
+    type: "string"
+    description: "Parameter for the hashcat tool."
+    required: false
+    default: "0"
+    flag: "-a"
+    format: "flag"
+  - name: "wordlist"
+    type: "string"
+    description: "Path to the wordlist file."
+    required: false
+    default: "/usr/share/wordlists/rockyou.txt"
+    position: 1
+    format: "positional"
+  - name: "mask"
+    type: "string"
+    description: "Parameter for the hashcat tool."
+    required: false
+    position: 2
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: "Additional arguments to append to the command."
+    required: false
+    format: "positional"

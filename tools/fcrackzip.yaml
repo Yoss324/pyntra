@@ -1,0 +1,86 @@
+name: "fcrackzip"
+command: "fcrackzip"
+enabled: true
+short_description: "Wrapper for the fcrackzip command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Brute-force attacks
+  - Dictionary attacks
+  - Multi-threading support
+
+  **Use Cases：**
+  - CTF competitions
+  - Security testing
+  - Digital forensics
+
+  **Notes：**
+  - Cracking time depends on password complexity
+  - Use a wordlist to improve efficiency
+parameters:
+  - name: "file"
+    type: "string"
+    description: "Path to the file or directory to use."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "dictionary_mode"
+    type: "bool"
+    description: "Parameter for the fcrackzip tool."
+    required: false
+    flag: "-D"
+    format: "flag"
+    default: false
+  - name: "dictionary"
+    type: "string"
+    description: "Parameter for the fcrackzip tool."
+    required: false
+    flag: "-p"
+    format: "flag"
+  - name: "bruteforce"
+    type: "bool"
+    description: "Parameter for the fcrackzip tool."
+    required: false
+    flag: "-b"
+    format: "flag"
+  - name: "charset"
+    type: "string"
+    description: "Parameter for the fcrackzip tool."
+    required: false
+    flag: "-c"
+    format: "flag"
+  - name: "length_range"
+    type: "string"
+    description: "Parameter for the fcrackzip tool."
+    required: false
+    flag: "-l"
+    format: "flag"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

@@ -1,0 +1,76 @@
+name: "arjun"
+command: "arjun"
+enabled: true
+short_description: "Wrapper for the arjun command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - HTTPParameter discovery
+  - Multi-threading support
+
+  **Use Cases：**
+  - Parameter discovery
+  - Security testing
+parameters:
+  - name: "url"
+    type: "string"
+    description: "Target URL."
+    required: true
+    flag: "-u"
+    format: "flag"
+  - name: "method"
+    type: "string"
+    description: "HTTP method to use."
+    required: false
+    flag: "-m"
+    format: "flag"
+    default: "GET"
+  - name: "wordlist"
+    type: "string"
+    description: "Path to the wordlist file."
+    required: false
+    flag: "-w"
+    format: "flag"
+  - name: "threads"
+    type: "int"
+    description: "Number of worker threads to use."
+    required: false
+    flag: "-t"
+    format: "flag"
+    default: 25
+  - name: "stable"
+    type: "bool"
+    description: "Parameter for the arjun tool."
+    required: false
+    flag: "--stable"
+    format: "flag"
+    default: false
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - "-o output.txt": write output to a file
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"

@@ -1,0 +1,77 @@
+name: "uro"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import shlex
+    import subprocess
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    urls = sys.argv[1]
+    extra = sys.argv[2] if len(sys.argv) > 2 else ""
+
+    cmd = ["uro"]
+    if extra:
+        cmd.extend(shlex.split(extra))
+
+    proc = subprocess.run(
+        cmd,
+        input=urls,
+        capture_output=True,
+        text=True,
+    )
+    if proc.stdout:
+        sys.stdout.write(proc.stdout)
+    if proc.stderr:
+        sys.stderr.write(proc.stderr)
+    sys.exit(proc.returncode)
+enabled: true
+short_description: "Wrapper for the uro command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+  - Fast processing
+
+  **Use Cases：**
+  - Toolchain integration
+parameters:
+  - name: "urls"
+    type: "string"
+    description: "Parameter for the uro tool."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    default: ""
+    position: 1
+    format: "positional"

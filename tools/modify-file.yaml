@@ -1,0 +1,84 @@
+name: "modify-file"
+command: "python3"
+args:
+  - "-c"
+  - |
+    import sys
+    from pathlib import Path
+
+    if len(sys.argv) < 3:
+        sys.stderr.write("Usage: modify-file <filename> <content> [append]\n")
+        sys.exit(1)
+
+    filename = sys.argv[1]
+    content = sys.argv[2]
+    append_arg = sys.argv[3].lower() if len(sys.argv) > 3 else "false"
+    append = append_arg in ("1", "true", "yes", "on")
+
+    path = Path(filename)
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    mode = "a" if append else "w"
+    with path.open(mode, encoding="utf-8") as f:
+        f.write(content)
+
+    action = "Append" if append else "Overwrite"
+    print(f"{action} write completed: {path}")
+enabled: true
+short_description: "Wrapper for the modify-file command"
+description: |
+  Wrapper for the $toolName command or embedded helper script.
+
+  **Key Features:**
+  - Structured parameters for repeatable execution
+  - Suitable for security testing and automation workflows
+  - Returns command output for further orchestration
+
+  **Use Cases:**
+  - Targeted validation and assessment tasks
+  - Repeatable command execution from the agent runtime
+  - Evidence collection in larger workflows
+
+  **Key Features：**
+
+  **Use Cases：**
+parameters:
+  - name: "filename"
+    type: "string"
+    description: "Path to the file or directory to use."
+    required: true
+    position: 0
+    format: "positional"
+  - name: "content"
+    type: "string"
+    description: "Content or payload to write."
+    required: true
+    position: 1
+    format: "positional"
+  - name: "append"
+    type: "bool"
+    description: "Parameter for the modify-file tool."
+    required: false
+    default: false
+    position: 2
+    format: "positional"
+  - name: "additional_args"
+    type: "string"
+    description: |
+      Additional arguments to append to the command.
+
+      **Notes:**
+      - Separate multiple arguments with spaces.
+      - Ensure values are well-formed and safe for command execution.
+      - This text is appended directly to the end of the command.
+
+      **Example Values：**
+      - Add common examples based on the tool behavior
+
+      **Notes：**
+      - Separate multiple arguments with spaces
+      - This value is appended directly to the end of the command
+    required: false
+    format: "positional"
