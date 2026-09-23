@@ -483,6 +483,8 @@ func setupRoutes(
 		protected.GET("/monitor/stats", monitorHandler.GetStats)
 		protected.GET("/config", configHandler.GetConfig)
 		protected.GET("/config/tools", configHandler.GetTools)
+		protected.GET("/config/providers", configHandler.GetProviders)
+		protected.GET("/config/mcp-clients", configHandler.GetMCPClients)
 		protected.PUT("/config", configHandler.UpdateConfig)
 		protected.POST("/config/apply", configHandler.ApplyConfig)
 		protected.POST("/config/test-openai", configHandler.TestOpenAI)

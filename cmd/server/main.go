@@ -26,6 +26,7 @@ func main() {
 	}
 	if cfg.MCP.Enabled {
 		config.PrintMCPConfigJSON(cfg.MCP)
+		config.PrintMCPClientConfigs(cfg.MCP)
 	}
 
 	// Initialize logger

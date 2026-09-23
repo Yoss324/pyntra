@@ -27,22 +27,38 @@ log:
 # Conversation-Related Configuration
 # ============================================
 
-# AI Model Configuration (supports OpenAI compatible API)
-# Required fields: api_key, base_url, model must be filled for normal operation
-# Supported API providers:
-#   - OpenAI: https://api.openai.com/v1
-#   - DeepSeek: https://api.deepseek.com/v1
-#   - Other OpenAI protocol compatible APIs
-#   - Ollama: http://localhost:11434/v1 (or your Ollama server address)
-# Common models: gpt-4, gpt-3.5-turbo, deepseek-chat, claude-3-opus, etc.
-# provider: optional values: openai(default) | claude(automatic bridging to Anthropic Claude Messages API)
+# AI Model Configuration (works with ANY OpenAI-compatible inference provider)
+# Required fields: api_key, base_url, model must be filled for normal operation.
+# Every provider except Anthropic uses the OpenAI Chat Completions protocol;
+# provider: claude (or anthropic) is auto-bridged to the Anthropic Messages API.
+# So any local model, Ollama model, Hugging Face endpoint, or hosted API works —
+# it is fully custom-configurable: just point base_url/api_key/model at it.
+#
+# provider presets (GET /api/config/providers returns the full list with base_urls):
+#   ollama       -> http://localhost:11434/v1        (any local Ollama model; api_key can be any placeholder)
+#   openai       -> https://api.openai.com/v1
+#   anthropic    -> https://api.anthropic.com/v1     (alias: claude; Messages API bridge)
+#   huggingface  -> https://router.huggingface.co/v1 (alias: hf; HF token as api_key)
+#   deepseek     -> https://api.deepseek.com/v1
+#   openrouter   -> https://openrouter.ai/api/v1
+#   groq         -> https://api.groq.com/openai/v1
+#   together     -> https://api.together.xyz/v1
+#   mistral      -> https://api.mistral.ai/v1
+#   lmstudio     -> http://localhost:1234/v1         (local LM Studio server)
+#   vllm         -> http://localhost:8000/v1         (self-hosted vLLM)
+#   localai      -> http://localhost:8080/v1         (self-hosted LocalAI)
+#   custom       -> any other OpenAI-compatible endpoint
+#
+# NOTE: AI coding agents (Claude Code, Cursor, Cline, opencode, Codex, Windsurf)
+# are MCP CLIENTS, not model providers — connect them to Pyntra's MCP server via
+# the snippets printed at startup or GET /api/config/mcp-clients (see docs/mcp-clients.md).
 
 
 openai:
-  provider: openai # API provider: openai(default, OpenAI protocol compatible) | claude(automatic bridging to Anthropic Claude Messages API)
+  provider: ollama # provider id (see presets above); anything other than claude/anthropic uses the OpenAI-compatible path
   base_url: http://localhost:11434/v1 # Ollama API base URL (required)
   api_key: ollama # API key (required, but Ollama doesn't use it - can be any value)
-  model: qwen2.5:7b # Model name (required) - Using qwen2.5:7b
+  model: qwen2.5:7b # Model name (required) - any Ollama model, e.g. llama3.1 / qwen2.5:7b / deepseek-r1
   max_total_tokens: 8192 # Maximum Token number limit for LLM context (adjusted for qwen2.5:7b context window)
 # ============================================
 # Agent Configuration
@@ -125,8 +141,39 @@ mcp:
   auth_header: "X-MCP-Token" # Authentication: request must carry this header with value matching auth_header_value to call. Leave empty for no authentication
   auth_header_value: "" # Authentication key value (used with auth_header, recommend using random string)
 # External MCP Configuration
+# Register any external MCP server here (stdio / sse / http / simple_http).
+# Servers can also be added/edited/toggled live from the Settings > External MCP UI.
 external_mcp:
-  servers: {}
+  servers:
+    # --- Burp Suite (via PortSwigger MCP proxy) ------------------------------
+    # Gives Pyntra's agents access to Burp's tools (Repeater/send request, Proxy
+    # history, Intruder, Scanner, site map, etc.). Two ways to connect:
+    #
+    # 1) stdio via mcp-proxy.jar (this preset). In Burp: Extensions > BApp Store
+    #    > install "MCP Server" and enable it (default SSE http://127.0.0.1:9876).
+    #    Obtain mcp-proxy.jar from Burp's MCP Server tab ("Install proxy for AI
+    #    clients that only support stdio") and place it at the path below.
+    #    Requires Java on PATH (java -version).
+    #
+    # 2) direct SSE (no jar/Java): set transport: sse and
+    #    url: http://127.0.0.1:9876/sse  (comment out command/args below).
+    #
+    # Disabled by default — set external_mcp_enable: true (or Start in the UI).
+    burp:
+      transport: stdio
+      command: java
+      args:
+        - "-jar"
+        - "plugins/burp-suite/mcp-proxy/mcp-proxy.jar"
+        - "--sse-url"
+        - "http://127.0.0.1:9876/sse"
+      description: "Burp Suite tools via PortSwigger MCP proxy (Repeater, Proxy history, Scanner, site map)"
+      timeout: 60
+      # Off by default so Pyntra doesn't try to reach Burp on every startup.
+      # Flip to enable: turn on via Settings > External MCP > Start, or set
+      # `disabled: false` + `external_mcp_enable: true` here and restart.
+      disabled: true
+      external_mcp_enable: false
 # ============================================
 # Knowledge Base Related Configuration
 # ============================================

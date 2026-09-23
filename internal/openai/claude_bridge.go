@@ -681,8 +681,7 @@ func isClaudeProvider(cfg *config.OpenAIConfig) bool {
 	if cfg == nil {
 		return false
 	}
-	return strings.EqualFold(strings.TrimSpace(cfg.Provider), "claude") ||
-		strings.EqualFold(strings.TrimSpace(cfg.Provider), "anthropic")
+	return config.ProviderIsAnthropic(cfg.Provider)
 }
 
 // ============================================================
