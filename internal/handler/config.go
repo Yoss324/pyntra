@@ -35,10 +35,6 @@ type KnowledgeInitializer func() (*KnowledgeHandler, error)
 type AppUpdater interface {
 	UpdateKnowledgeComponents(handler *KnowledgeHandler, manager interface{}, retriever interface{}, indexer interface{})
 }
-type RobotRestarter interface {
-	RestartRobotConnections()
-}
-
 // ConfigHandler configureprocessor
 type ConfigHandler struct {
 	configPath string
@@ -56,7 +52,6 @@ type ConfigHandler struct {
 	retrieverUpdater RetrieverUpdater
 	knowledgeInitializer KnowledgeInitializer
 	appUpdater AppUpdater // Appupdatedevice/processor(optional)
-	robotRestarter RobotRestarter
 	logger *zap.Logger
 	mu sync.RWMutex
 	lastEmbeddingConfig *config.EmbeddingConfig
@@ -134,21 +129,13 @@ func (h *ConfigHandler) SetAppUpdater(updater AppUpdater) {
 	defer h.mu.Unlock()
 	h.appUpdater = updater
 }
-func (h *ConfigHandler) SetRobotRestarter(restarter RobotRestarter) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	h.robotRestarter = restarter
-}
-
 // GetConfigResponse getconfigureresponse
 type GetConfigResponse struct {
 	OpenAI config.OpenAIConfig `json:"openai"`
-	FOFA config.FofaConfig `json:"fofa"`
 	MCP config.MCPConfig `json:"mcp"`
 	Tools []ToolConfigInfo `json:"tools"`
 	Agent config.AgentConfig `json:"agent"`
 	Knowledge config.KnowledgeConfig `json:"knowledge"`
-	Robots config.RobotsConfig `json:"robots,omitempty"`
 	MultiAgent config.MultiAgentPublic `json:"multi_agent,omitempty"`
 }
 
@@ -222,7 +209,6 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 	multiPub := config.MultiAgentPublic{
 		Enabled: h.config.MultiAgent.Enabled,
 		DefaultMode: h.config.MultiAgent.DefaultMode,
-		RobotUseMultiAgent: h.config.MultiAgent.RobotUseMultiAgent,
 		BatchUseMultiAgent: h.config.MultiAgent.BatchUseMultiAgent,
 		SubAgentCount: subAgentCount,
 		Orchestration: config.NormalizeMultiAgentOrchestration(h.config.MultiAgent.Orchestration),
@@ -234,12 +220,10 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 
 	c.JSON(http.StatusOK, GetConfigResponse{
 		OpenAI: h.config.OpenAI,
-		FOFA: h.config.FOFA,
 		MCP: h.config.MCP,
 		Tools: tools,
 		Agent: h.config.Agent,
 		Knowledge: h.config.Knowledge,
-		Robots: h.config.Robots,
 		MultiAgent: multiPub,
 	})
 }
@@ -476,12 +460,10 @@ func (h *ConfigHandler) GetTools(c *gin.Context) {
 // UpdateConfigRequest updateconfigurerequest
 type UpdateConfigRequest struct {
 	OpenAI *config.OpenAIConfig `json:"openai,omitempty"`
-	FOFA *config.FofaConfig `json:"fofa,omitempty"`
 	MCP *config.MCPConfig `json:"mcp,omitempty"`
 	Tools []ToolEnableStatus `json:"tools,omitempty"`
 	Agent *config.AgentConfig `json:"agent,omitempty"`
 	Knowledge *config.KnowledgeConfig `json:"knowledge,omitempty"`
-	Robots *config.RobotsConfig `json:"robots,omitempty"`
 	MultiAgent *config.MultiAgentAPIUpdate `json:"multi_agent,omitempty"`
 }
 
@@ -511,12 +493,6 @@ func (h *ConfigHandler) UpdateConfig(c *gin.Context) {
 			zap.String("base_url", h.config.OpenAI.BaseURL),
 			zap.String("model", h.config.OpenAI.Model),
 		)
-	}
-
-	// updateFOFAconfigure
-	if req.FOFA != nil {
-		h.config.FOFA = *req.FOFA
-		h.logger.Info("updateFOFAconfigure", zap.String("email", h.config.FOFA.Email))
 	}
 
 	// updateMCPconfigure
@@ -556,21 +532,12 @@ func (h *ConfigHandler) UpdateConfig(c *gin.Context) {
 			zap.Float64("similarity_threshold", h.config.Knowledge.Retrieval.SimilarityThreshold),
 		)
 	}
-	if req.Robots != nil {
-		h.config.Robots = *req.Robots
-		h.logger.Info("updatedevice/processorconfigure",
-			zap.Bool("wecom_enabled", h.config.Robots.Wecom.Enabled),
-			zap.Bool("dingtalk_enabled", h.config.Robots.Dingtalk.Enabled),
-			zap.Bool("lark_enabled", h.config.Robots.Lark.Enabled),
-		)
-	}
 	if req.MultiAgent != nil {
 		h.config.MultiAgent.Enabled = req.MultiAgent.Enabled
 		dm := strings.TrimSpace(req.MultiAgent.DefaultMode)
 		if dm == "multi" || dm == "single" {
 			h.config.MultiAgent.DefaultMode = dm
 		}
-		h.config.MultiAgent.RobotUseMultiAgent = req.MultiAgent.RobotUseMultiAgent
 		h.config.MultiAgent.BatchUseMultiAgent = req.MultiAgent.BatchUseMultiAgent
 		if req.MultiAgent.PlanExecuteLoopMaxIterations != nil {
 			h.config.MultiAgent.PlanExecuteLoopMaxIterations = *req.MultiAgent.PlanExecuteLoopMaxIterations
@@ -578,7 +545,6 @@ func (h *ConfigHandler) UpdateConfig(c *gin.Context) {
 		h.logger.Info("updatemulti-agentconfigure",
 			zap.Bool("enabled", h.config.MultiAgent.Enabled),
 			zap.String("default_mode", h.config.MultiAgent.DefaultMode),
-			zap.Bool("robot_use_multi_agent", h.config.MultiAgent.RobotUseMultiAgent),
 			zap.Bool("batch_use_multi_agent", h.config.MultiAgent.BatchUseMultiAgent),
 			zap.Int("plan_execute_loop_max_iterations", h.config.MultiAgent.PlanExecuteLoopMaxIterations),
 		)
@@ -920,11 +886,6 @@ func (h *ConfigHandler) ApplyConfig(c *gin.Context) {
 			APIKey: h.config.Knowledge.Embedding.APIKey,
 		}
 	}
-	if h.robotRestarter != nil {
-		h.robotRestarter.RestartRobotConnections()
-		h.logger.Info("hastriggerdevice/processorconnectionrestart(/)")
-	}
-
 	h.logger.Info("configurehasapply",
 		zap.Int("tools_count", len(h.config.Security.Tools)),
 	)
@@ -954,9 +915,7 @@ func (h *ConfigHandler) saveConfig() error {
 	updateAgentConfig(root, h.config.Agent.MaxIterations)
 	updateMCPConfig(root, h.config.MCP)
 	updateOpenAIConfig(root, h.config.OpenAI)
-	updateFOFAConfig(root, h.config.FOFA)
 	updateKnowledgeConfig(root, h.config.Knowledge)
-	updateRobotsConfig(root, h.config.Robots)
 	updateMultiAgentConfig(root, h.config.MultiAgent)
 	originalConfigs := make(map[string]map[string]bool)
 	externalMCPNode := findMapValue(root, "external_mcp")
@@ -1103,14 +1062,6 @@ func updateOpenAIConfig(doc *yaml.Node, cfg config.OpenAIConfig) {
 	}
 }
 
-func updateFOFAConfig(doc *yaml.Node, cfg config.FofaConfig) {
-	root := doc.Content[0]
-	fofaNode := ensureMap(root, "fofa")
-	setStringInMap(fofaNode, "base_url", cfg.BaseURL)
-	setStringInMap(fofaNode, "email", cfg.Email)
-	setStringInMap(fofaNode, "api_key", cfg.APIKey)
-}
-
 func updateKnowledgeConfig(doc *yaml.Node, cfg config.KnowledgeConfig) {
 	root := doc.Content[0]
 	knowledgeNode := ensureMap(root, "knowledge")
@@ -1148,36 +1099,11 @@ func updateKnowledgeConfig(doc *yaml.Node, cfg config.KnowledgeConfig) {
 	setIntInMap(indexingNode, "retry_delay_ms", cfg.Indexing.RetryDelayMs)
 }
 
-func updateRobotsConfig(doc *yaml.Node, cfg config.RobotsConfig) {
-	root := doc.Content[0]
-	robotsNode := ensureMap(root, "robots")
-
-	wecomNode := ensureMap(robotsNode, "wecom")
-	setBoolInMap(wecomNode, "enabled", cfg.Wecom.Enabled)
-	setStringInMap(wecomNode, "token", cfg.Wecom.Token)
-	setStringInMap(wecomNode, "encoding_aes_key", cfg.Wecom.EncodingAESKey)
-	setStringInMap(wecomNode, "corp_id", cfg.Wecom.CorpID)
-	setStringInMap(wecomNode, "secret", cfg.Wecom.Secret)
-	setIntInMap(wecomNode, "agent_id", int(cfg.Wecom.AgentID))
-
-	dingtalkNode := ensureMap(robotsNode, "dingtalk")
-	setBoolInMap(dingtalkNode, "enabled", cfg.Dingtalk.Enabled)
-	setStringInMap(dingtalkNode, "client_id", cfg.Dingtalk.ClientID)
-	setStringInMap(dingtalkNode, "client_secret", cfg.Dingtalk.ClientSecret)
-
-	larkNode := ensureMap(robotsNode, "lark")
-	setBoolInMap(larkNode, "enabled", cfg.Lark.Enabled)
-	setStringInMap(larkNode, "app_id", cfg.Lark.AppID)
-	setStringInMap(larkNode, "app_secret", cfg.Lark.AppSecret)
-	setStringInMap(larkNode, "verify_token", cfg.Lark.VerifyToken)
-}
-
 func updateMultiAgentConfig(doc *yaml.Node, cfg config.MultiAgentConfig) {
 	root := doc.Content[0]
 	maNode := ensureMap(root, "multi_agent")
 	setBoolInMap(maNode, "enabled", cfg.Enabled)
 	setStringInMap(maNode, "default_mode", cfg.DefaultMode)
-	setBoolInMap(maNode, "robot_use_multi_agent", cfg.RobotUseMultiAgent)
 	setBoolInMap(maNode, "batch_use_multi_agent", cfg.BatchUseMultiAgent)
 	setIntInMap(maNode, "plan_execute_loop_max_iterations", cfg.PlanExecuteLoopMaxIterations)
 }

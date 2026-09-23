@@ -79,13 +79,6 @@ async function loadConfig(loadTools = true) {
  if (maxTokensEl) {
  maxTokensEl.value = currentConfig.openai.max_total_tokens || 120000;
  }
- const fofa = currentConfig.fofa || {};
- const fofaEmailEl = document.getElementById('fofa-email');
- const fofaKeyEl = document.getElementById('fofa-api-key');
- const fofaBaseUrlEl = document.getElementById('fofa-base-url');
- if (fofaEmailEl) fofaEmailEl.value = fofa.email || '';
- if (fofaKeyEl) fofaKeyEl.value = fofa.api_key || '';
- if (fofaBaseUrlEl) fofaBaseUrlEl.value = fofa.base_url || '';
  document.getElementById('agent-max-iterations').value = currentConfig.agent.max_iterations || 30;
 
  const ma = currentConfig.multi_agent || {};
@@ -98,8 +91,6 @@ async function loadConfig(loadTools = true) {
  }
  const maMode = document.getElementById('multi-agent-default-mode');
  if (maMode) maMode.value = (ma.default_mode === 'multi') ? 'multi' : 'single';
- const maRobot = document.getElementById('multi-agent-robot-use');
- if (maRobot) maRobot.checked = ma.robot_use_multi_agent === true;
  const knowledgeEnabledCheckbox = document.getElementById('knowledge-enabled');
  if (knowledgeEnabledCheckbox) {
  knowledgeEnabledCheckbox.checked = currentConfig.knowledge?.enabled !== false;
@@ -215,36 +206,6 @@ async function loadConfig(loadTools = true) {
  retryDelayInput.value = indexing.retry_delay_ms ?? 1000;
  }
  }
- const robots = currentConfig.robots || {};
- const wecom = robots.wecom || {};
- const dingtalk = robots.dingtalk || {};
- const lark = robots.lark || {};
- const wecomEnabled = document.getElementById('robot-wecom-enabled');
- if (wecomEnabled) wecomEnabled.checked = wecom.enabled === true;
- const wecomToken = document.getElementById('robot-wecom-token');
- if (wecomToken) wecomToken.value = wecom.token || '';
- const wecomAes = document.getElementById('robot-wecom-encoding-aes-key');
- if (wecomAes) wecomAes.value = wecom.encoding_aes_key || '';
- const wecomCorp = document.getElementById('robot-wecom-corp-id');
- if (wecomCorp) wecomCorp.value = wecom.corp_id || '';
- const wecomSecret = document.getElementById('robot-wecom-secret');
- if (wecomSecret) wecomSecret.value = wecom.secret || '';
- const wecomAgentId = document.getElementById('robot-wecom-agent-id');
- if (wecomAgentId) wecomAgentId.value = wecom.agent_id || '0';
- const dingtalkEnabled = document.getElementById('robot-dingtalk-enabled');
- if (dingtalkEnabled) dingtalkEnabled.checked = dingtalk.enabled === true;
- const dingtalkClientId = document.getElementById('robot-dingtalk-client-id');
- if (dingtalkClientId) dingtalkClientId.value = dingtalk.client_id || '';
- const dingtalkClientSecret = document.getElementById('robot-dingtalk-client-secret');
- if (dingtalkClientSecret) dingtalkClientSecret.value = dingtalk.client_secret || '';
- const larkEnabled = document.getElementById('robot-lark-enabled');
- if (larkEnabled) larkEnabled.checked = lark.enabled === true;
- const larkAppId = document.getElementById('robot-lark-app-id');
- if (larkAppId) larkAppId.value = lark.app_id || '';
- const larkAppSecret = document.getElementById('robot-lark-app-secret');
- if (larkAppSecret) larkAppSecret.value = lark.app_secret || '';
- const larkVerify = document.getElementById('robot-lark-verify-token');
- if (larkVerify) larkVerify.value = lark.verify_token || '';
  if (loadTools) {
  const savedPageSize = getToolsPageSize();
  toolsPagination.pageSize = savedPageSize;
@@ -715,7 +676,6 @@ async function applySettings() {
  })()
  };
  
- const wecomAgentIdVal = document.getElementById('robot-wecom-agent-id')?.value.trim();
  const config = {
  openai: {
  provider: provider,
@@ -723,11 +683,6 @@ async function applySettings() {
  base_url: baseUrl,
  model: model,
  max_total_tokens: parseInt(document.getElementById('openai-max-total-tokens')?.value) || 120000
- },
- fofa: {
- email: document.getElementById('fofa-email')?.value.trim() || '',
- api_key: document.getElementById('fofa-api-key')?.value.trim() || '',
- base_url: document.getElementById('fofa-base-url')?.value.trim() || ''
  },
  agent: {
  max_iterations: parseInt(document.getElementById('agent-max-iterations').value) || 30
@@ -739,33 +694,11 @@ async function applySettings() {
  return {
  enabled: document.getElementById('multi-agent-enabled')?.checked === true,
  default_mode: document.getElementById('multi-agent-default-mode')?.value === 'multi' ? 'multi' : 'single',
- robot_use_multi_agent: document.getElementById('multi-agent-robot-use')?.checked === true,
  batch_use_multi_agent: false,
  plan_execute_loop_max_iterations: peLoop
  };
  })(),
  knowledge: knowledgeConfig,
- robots: {
- wecom: {
- enabled: document.getElementById('robot-wecom-enabled')?.checked === true,
- token: document.getElementById('robot-wecom-token')?.value.trim() || '',
- encoding_aes_key: document.getElementById('robot-wecom-encoding-aes-key')?.value.trim() || '',
- corp_id: document.getElementById('robot-wecom-corp-id')?.value.trim() || '',
- secret: document.getElementById('robot-wecom-secret')?.value.trim() || '',
- agent_id: parseInt(wecomAgentIdVal, 10) || 0
- },
- dingtalk: {
- enabled: document.getElementById('robot-dingtalk-enabled')?.checked === true,
- client_id: document.getElementById('robot-dingtalk-client-id')?.value.trim() || '',
- client_secret: document.getElementById('robot-dingtalk-client-secret')?.value.trim() || ''
- },
- lark: {
- enabled: document.getElementById('robot-lark-enabled')?.checked === true,
- app_id: document.getElementById('robot-lark-app-id')?.value.trim() || '',
- app_secret: document.getElementById('robot-lark-app-secret')?.value.trim() || '',
- verify_token: document.getElementById('robot-lark-verify-token')?.value.trim() || ''
- }
- },
  tools: []
  };
  saveCurrentPageToolStates();

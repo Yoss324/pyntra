@@ -8,10 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"pyntra/internal/agent"
+	"pyntra/internal/bot"
 	"pyntra/internal/config"
 	"pyntra/internal/database"
 	"pyntra/internal/handler"
@@ -19,7 +19,6 @@ import (
 	"pyntra/internal/logger"
 	"pyntra/internal/mcp"
 	"pyntra/internal/mcp/builtin"
-	"pyntra/internal/robot"
 	"pyntra/internal/security"
 	"pyntra/internal/skillpackage"
 	"pyntra/internal/storage"
@@ -44,10 +43,7 @@ type App struct {
 	knowledgeIndexer *knowledge.Indexer
 	knowledgeHandler *handler.KnowledgeHandler
 	agentHandler *handler.AgentHandler
-	robotHandler *handler.RobotHandler
-	robotMu sync.Mutex
-	dingCancel context.CancelFunc
-	larkCancel context.CancelFunc
+	botManager *bot.Manager
 }
 func New(cfg *config.Config, log *logger.Logger) (*App, error) {
 	gin.SetMode(gin.ReleaseMode)
@@ -259,13 +255,11 @@ func New(cfg *config.Config, log *logger.Logger) (*App, error) {
 	roleHandler := handler.NewRoleHandler(cfg, configPath, log.Logger)
 	roleHandler.SetSkillsManager(skillpackage.DirLister{SkillsRoot: skillsDir})
 	skillsHandler := handler.NewSkillsHandler(cfg, configPath, log.Logger)
-	fofaHandler := handler.NewFofaHandler(cfg, log.Logger)
 	terminalHandler := handler.NewTerminalHandler(log.Logger)
 	if db != nil {
 		skillsHandler.SetDB(db)
 	}
 	conversationHandler := handler.NewConversationHandler(db, log.Logger)
-	robotHandler := handler.NewRobotHandler(cfg, db, agentHandler, log.Logger)
 	openAPIHandler := handler.NewOpenAPIHandler(db, log.Logger, resultStorage, conversationHandler, agentHandler)
 	app := &App{
 		config: cfg,
@@ -283,9 +277,9 @@ func New(cfg *config.Config, log *logger.Logger) (*App, error) {
 		knowledgeIndexer: knowledgeIndexer,
 		knowledgeHandler: knowledgeHandler,
 		agentHandler: agentHandler,
-		robotHandler: robotHandler,
 	}
-	app.startRobotConnections()
+	app.botManager = bot.NewManager(agentHandler, log.Logger)
+	app.botManager.Start(cfg.Bots)
 	vulnerabilityRegistrar := func() error {
 		registerVulnerabilityTool(mcpServer, db, log.Logger)
 		return nil
@@ -330,14 +324,12 @@ func New(cfg *config.Config, log *logger.Logger) (*App, error) {
 		configHandler.SetKnowledgeToolRegistrar(registrar)
 		configHandler.SetRetrieverUpdater(knowledgeRetriever)
 	}
-	configHandler.SetRobotRestarter(app)
 	setupRoutes(
 		router,
 		authHandler,
 		agentHandler,
 		monitorHandler,
 		conversationHandler,
-		robotHandler,
 		groupHandler,
 		configHandler,
 		externalMCPHandler,
@@ -349,7 +341,6 @@ func New(cfg *config.Config, log *logger.Logger) (*App, error) {
 		roleHandler,
 		skillsHandler,
 		markdownAgentsHandler,
-		fofaHandler,
 		terminalHandler,
 		mcpServer,
 		authManager,
@@ -392,16 +383,9 @@ func (a *App) Run() error {
 	return a.router.Run(addr)
 }
 func (a *App) Shutdown() {
-	a.robotMu.Lock()
-	if a.dingCancel != nil {
-		a.dingCancel()
-		a.dingCancel = nil
+	if a.botManager != nil {
+		a.botManager.Stop()
 	}
-	if a.larkCancel != nil {
-		a.larkCancel()
-		a.larkCancel = nil
-	}
-	a.robotMu.Unlock()
 	if a.externalMCPMgr != nil {
 		a.externalMCPMgr.StopAll()
 	}
@@ -411,42 +395,12 @@ func (a *App) Shutdown() {
 		}
 	}
 }
-func (a *App) startRobotConnections() {
-	a.robotMu.Lock()
-	defer a.robotMu.Unlock()
-	cfg := a.config
-	if cfg.Robots.Lark.Enabled && cfg.Robots.Lark.AppID != "" && cfg.Robots.Lark.AppSecret != "" {
-		ctx, cancel := context.WithCancel(context.Background())
-		a.larkCancel = cancel
-		go robot.StartLark(ctx, cfg.Robots.Lark, a.robotHandler, a.logger.Logger)
-	}
-	if cfg.Robots.Dingtalk.Enabled && cfg.Robots.Dingtalk.ClientID != "" && cfg.Robots.Dingtalk.ClientSecret != "" {
-		ctx, cancel := context.WithCancel(context.Background())
-		a.dingCancel = cancel
-		go robot.StartDing(ctx, cfg.Robots.Dingtalk, a.robotHandler, a.logger.Logger)
-	}
-}
-func (a *App) RestartRobotConnections() {
-	a.robotMu.Lock()
-	if a.dingCancel != nil {
-		a.dingCancel()
-		a.dingCancel = nil
-	}
-	if a.larkCancel != nil {
-		a.larkCancel()
-		a.larkCancel = nil
-	}
-	a.robotMu.Unlock()
-	time.Sleep(200 * time.Millisecond)
-	a.startRobotConnections()
-}
 func setupRoutes(
 	router *gin.Engine,
 	authHandler *handler.AuthHandler,
 	agentHandler *handler.AgentHandler,
 	monitorHandler *handler.MonitorHandler,
 	conversationHandler *handler.ConversationHandler,
-	robotHandler *handler.RobotHandler,
 	groupHandler *handler.GroupHandler,
 	configHandler *handler.ConfigHandler,
 	externalMCPHandler *handler.ExternalMCPHandler,
@@ -458,7 +412,6 @@ func setupRoutes(
 	roleHandler *handler.RoleHandler,
 	skillsHandler *handler.SkillsHandler,
 	markdownAgentsHandler *handler.MarkdownAgentsHandler,
-	fofaHandler *handler.FofaHandler,
 	terminalHandler *handler.TerminalHandler,
 	mcpServer *mcp.Server,
 	authManager *security.AuthManager,
@@ -472,16 +425,9 @@ func setupRoutes(
 		authRoutes.POST("/change-password", security.AuthMiddleware(authManager), authHandler.ChangePassword)
 		authRoutes.GET("/validate", security.AuthMiddleware(authManager), authHandler.Validate)
 	}
-	api.GET("/robot/wecom", robotHandler.HandleWecomGET)
-	api.POST("/robot/wecom", robotHandler.HandleWecomPOST)
-	api.POST("/robot/dingtalk", robotHandler.HandleDingtalkPOST)
-	api.POST("/robot/lark", robotHandler.HandleLarkPOST)
-
 	protected := api.Group("")
 	protected.Use(security.AuthMiddleware(authManager))
 	{
-		protected.POST("/robot/test", robotHandler.HandleRobotTest)
-
 		// Agent Loop
 		protected.POST("/agent-loop", agentHandler.AgentLoop)
 		protected.POST("/agent-loop/stream", agentHandler.AgentLoopStream)
@@ -497,8 +443,6 @@ func setupRoutes(
 		protected.POST("/multi-agent/markdown-agents", markdownAgentsHandler.CreateMarkdownAgent)
 		protected.PUT("/multi-agent/markdown-agents/:filename", markdownAgentsHandler.UpdateMarkdownAgent)
 		protected.DELETE("/multi-agent/markdown-agents/:filename", markdownAgentsHandler.DeleteMarkdownAgent)
-		protected.POST("/fofa/search", fofaHandler.Search)
-		protected.POST("/fofa/parse", fofaHandler.ParseNaturalLanguage)
 		protected.POST("/batch-tasks", agentHandler.CreateBatchQueue)
 		protected.GET("/batch-tasks", agentHandler.ListBatchQueues)
 		protected.GET("/batch-tasks/:queueId", agentHandler.GetBatchQueue)

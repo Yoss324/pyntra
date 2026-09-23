@@ -31,7 +31,7 @@ Pyntra drives AI agents through the full offensive-security lifecycle. It orches
 - 🕸️ **Attack-chain graphing** — visualize, score, and replay testing sequences.
 - 🐚 **Vulnerability & WebShell management** — track findings and manage remote sessions from the console.
 - 🌗 **Modern web console** — clean dashboard with light/dark themes.
-- 💬 **Chat access** — optional DingTalk / Lark / WeChat Work bots for testing on the go.
+- 💬 **Chat access** — optional Telegram, Slack, and Discord bots for testing on the go.
 - 🏠 **Runs fully local** — point it at [Ollama](https://ollama.com) for an offline, self-hosted setup, or use any OpenAI-compatible / Anthropic Claude endpoint.
 
 ## 🚀 Quick start
@@ -65,14 +65,14 @@ All settings live in [`config.yaml`](config.yaml) and can also be edited from th
 | `auth` | Web login password and session length — **change `Root@1234` before exposing the app** |
 | `openai` | LLM provider, base URL, model (OpenAI-compatible, Ollama, or Claude via `provider: claude`) |
 | `knowledge` | Embedding model and RAG settings |
-| `robots` | DingTalk / Lark / WeChat Work chat bots |
+| `bots` | Telegram / Slack / Discord chat bots |
 | `mcp` | Built-in MCP server and external MCP tool servers |
 
 ## 🧱 Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  Web Console (SPA)  ·  Chat bots (DingTalk / Lark / WeCom) │
+│  Web Console (SPA)                                         │
 ├──────────────────────────────────────────────────────────┤
 │  HTTP + WebSocket API (Gin)                                │
 ├──────────────────────────────────────────────────────────┤

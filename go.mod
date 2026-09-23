@@ -3,7 +3,7 @@ module pyntra
 go 1.25.0
 
 require (
-	github.com/bytedance/sonic v1.15.0
+	github.com/bwmarrin/discordgo v0.29.0
 	github.com/cloudwego/eino v0.8.8
 	github.com/cloudwego/eino-ext/adk/backend/local v0.0.0-20260416081055-0ebab92e14f2
 	github.com/cloudwego/eino-ext/components/document/loader/file v0.0.0-20260416081055-0ebab92e14f2
@@ -16,9 +16,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/larksuite/oapi-sdk-go/v3 v3.4.22
 	github.com/modelcontextprotocol/go-sdk v1.2.0
-	github.com/open-dingtalk/dingtalk-stream-sdk-go v0.9.1
 	github.com/pkoukk/tiktoken-go v0.1.8
 	github.com/robfig/cron/v3 v3.0.1
 	go.uber.org/zap v1.26.0
@@ -32,6 +30,7 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.10.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
+	github.com/bytedance/sonic v1.15.0 // indirect
 	github.com/bytedance/sonic/loader v0.5.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/cloudwego/eino-ext/libs/acl/openai v0.1.16 // indirect
@@ -44,7 +43,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/jsonschema-go v0.3.0 // indirect
 	github.com/goph/emperror v0.17.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -80,7 +78,3 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
-
-// Work around the DingTalk Stream SDK issue where a long-lived connection can panic with "send on closed channel" after disconnects.
-// See: https://github.com/open-dingtalk/dingtalk-stream-sdk-go/issues/28
-replace github.com/open-dingtalk/dingtalk-stream-sdk-go => github.com/uouuou/dingtalk-stream-sdk-go v0.0.0-20250626025113-079132acc406

@@ -20,14 +20,13 @@ type Config struct {
 	Log         LogConfig             `yaml:"log"`
 	MCP         MCPConfig             `yaml:"mcp"`
 	OpenAI      OpenAIConfig          `yaml:"openai"`
-	FOFA        FofaConfig            `yaml:"fofa,omitempty" json:"fofa,omitempty"`
 	Agent       AgentConfig           `yaml:"agent"`
 	Security    SecurityConfig        `yaml:"security"`
 	Database    DatabaseConfig        `yaml:"database"`
 	Auth        AuthConfig            `yaml:"auth"`
 	ExternalMCP ExternalMCPConfig     `yaml:"external_mcp,omitempty"`
 	Knowledge   KnowledgeConfig       `yaml:"knowledge,omitempty"`
-	Robots      RobotsConfig          `yaml:"robots,omitempty" json:"robots,omitempty"`         // Configuration for WeChat Work/DingTalk/Lark and other chatbot robots
+	Bots        BotsConfig            `yaml:"bots,omitempty" json:"bots,omitempty"`             // Telegram / Slack / Discord chat bots
 	RolesDir    string                `yaml:"roles_dir,omitempty" json:"roles_dir,omitempty"`   // Role configuration file directory (new method)
 	Roles       map[string]RoleConfig `yaml:"roles,omitempty" json:"roles,omitempty"`           // Backward compatibility: support defining roles in the main configuration file
 	SkillsDir   string                `yaml:"skills_dir,omitempty" json:"skills_dir,omitempty"` // Skills configuration file directory
@@ -39,7 +38,6 @@ type Config struct {
 type MultiAgentConfig struct {
 	Enabled            bool   `yaml:"enabled" json:"enabled"`
 	DefaultMode        string `yaml:"default_mode" json:"default_mode"`                   // single | multi, for frontend default display
-	RobotUseMultiAgent bool   `yaml:"robot_use_multi_agent" json:"robot_use_multi_agent"` // When true, DingTalk/Lark/WeChat Work robots use Eino multi-agent
 	BatchUseMultiAgent bool   `yaml:"batch_use_multi_agent" json:"batch_use_multi_agent"` // When true, each sub-task in the batch task queue uses Eino multi-agent
 	// Orchestration is deprecated: retained only for backward compatibility with old config.yaml; orchestration is determined by chat/WebShell request body orchestration, defaulting to deep when not provided.
 	Orchestration string `yaml:"orchestration,omitempty" json:"orchestration,omitempty"`
@@ -130,7 +128,6 @@ type MultiAgentSubConfig struct {
 type MultiAgentPublic struct {
 	Enabled                      bool   `json:"enabled"`
 	DefaultMode                  string `json:"default_mode"`
-	RobotUseMultiAgent           bool   `json:"robot_use_multi_agent"`
 	BatchUseMultiAgent           bool   `json:"batch_use_multi_agent"`
 	SubAgentCount                int    `json:"sub_agent_count"`
 	Orchestration                string `json:"orchestration,omitempty"`
@@ -154,41 +151,37 @@ func NormalizeMultiAgentOrchestration(s string) string {
 type MultiAgentAPIUpdate struct {
 	Enabled                      bool   `json:"enabled"`
 	DefaultMode                  string `json:"default_mode"`
-	RobotUseMultiAgent           bool   `json:"robot_use_multi_agent"`
 	BatchUseMultiAgent           bool   `json:"batch_use_multi_agent"`
 	PlanExecuteLoopMaxIterations *int   `json:"plan_execute_loop_max_iterations,omitempty"`
 }
 
-// RobotsConfig Robot configuration (WeChat Work, DingTalk, Lark, etc.)
-type RobotsConfig struct {
-	Wecom    RobotWecomConfig    `yaml:"wecom,omitempty" json:"wecom,omitempty"`       // WeChat Work
-	Dingtalk RobotDingtalkConfig `yaml:"dingtalk,omitempty" json:"dingtalk,omitempty"` // DingTalk
-	Lark     RobotLarkConfig     `yaml:"lark,omitempty" json:"lark,omitempty"`         // Lark
+// BotsConfig chat-bot configuration (Telegram, Slack, Discord).
+type BotsConfig struct {
+	Telegram TelegramBotConfig `yaml:"telegram,omitempty" json:"telegram,omitempty"`
+	Slack    SlackBotConfig    `yaml:"slack,omitempty" json:"slack,omitempty"`
+	Discord  DiscordBotConfig  `yaml:"discord,omitempty" json:"discord,omitempty"`
 }
 
-// RobotWecomConfig WeChat Work robot configuration
-type RobotWecomConfig struct {
-	Enabled        bool   `yaml:"enabled" json:"enabled"`
-	Token          string `yaml:"token" json:"token"`                       // Callback URL verification Token
-	EncodingAESKey string `yaml:"encoding_aes_key" json:"encoding_aes_key"` // EncodingAESKey
-	CorpID         string `yaml:"corp_id" json:"corp_id"`                   // Enterprise ID
-	Secret         string `yaml:"secret" json:"secret"`                     // Application Secret
-	AgentID        int64  `yaml:"agent_id" json:"agent_id"`                 // Application AgentId
+// TelegramBotConfig Telegram bot (HTTP long-polling; no extra dependency).
+type TelegramBotConfig struct {
+	Enabled bool   `yaml:"enabled" json:"enabled"`
+	Token   string `yaml:"token" json:"token"`                   // Bot token from @BotFather
+	Role    string `yaml:"role,omitempty" json:"role,omitempty"` // Optional role name applied to bot conversations
 }
 
-// RobotDingtalkConfig DingTalk robot configuration
-type RobotDingtalkConfig struct {
-	Enabled      bool   `yaml:"enabled" json:"enabled"`
-	ClientID     string `yaml:"client_id" json:"client_id"`         // Application Key (AppKey)
-	ClientSecret string `yaml:"client_secret" json:"client_secret"` // Application Secret
+// SlackBotConfig Slack bot (Socket Mode; app-level token + bot token).
+type SlackBotConfig struct {
+	Enabled  bool   `yaml:"enabled" json:"enabled"`
+	AppToken string `yaml:"app_token" json:"app_token"`           // Socket Mode app-level token (xapp-...)
+	BotToken string `yaml:"bot_token" json:"bot_token"`           // Web API bot token (xoxb-...)
+	Role     string `yaml:"role,omitempty" json:"role,omitempty"` // Optional role name applied to bot conversations
 }
 
-// RobotLarkConfig Lark robot configuration
-type RobotLarkConfig struct {
-	Enabled     bool   `yaml:"enabled" json:"enabled"`
-	AppID       string `yaml:"app_id" json:"app_id"`             // Application App ID
-	AppSecret   string `yaml:"app_secret" json:"app_secret"`     // Application App Secret
-	VerifyToken string `yaml:"verify_token" json:"verify_token"` // Event subscription Verification Token (optional)
+// DiscordBotConfig Discord bot (gateway connection).
+type DiscordBotConfig struct {
+	Enabled bool   `yaml:"enabled" json:"enabled"`
+	Token   string `yaml:"token" json:"token"`                   // Bot token from the Discord developer portal
+	Role    string `yaml:"role,omitempty" json:"role,omitempty"` // Optional role name applied to bot conversations
 }
 
 type ServerConfig struct {
@@ -215,13 +208,6 @@ type OpenAIConfig struct {
 	BaseURL        string `yaml:"base_url" json:"base_url"`
 	Model          string `yaml:"model" json:"model"`
 	MaxTotalTokens int    `yaml:"max_total_tokens,omitempty" json:"max_total_tokens,omitempty"`
-}
-
-type FofaConfig struct {
-	// Email is the FOFA account email; APIKey is the FOFA API Key (recommended to use read-only permissions)
-	Email   string `yaml:"email,omitempty" json:"email,omitempty"`
-	APIKey  string `yaml:"api_key,omitempty" json:"api_key,omitempty"`
-	BaseURL string `yaml:"base_url,omitempty" json:"base_url,omitempty"` // Default: https://fofa.info/api/v1/search/all
 }
 
 type SecurityConfig struct {

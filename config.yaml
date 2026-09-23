@@ -45,14 +45,6 @@ openai:
   model: qwen2.5:7b # Model name (required) - Using qwen2.5:7b
   max_total_tokens: 8192 # Maximum Token number limit for LLM context (adjusted for qwen2.5:7b context window)
 # ============================================
-# Information Gathering (FOFA) Configuration (Optional)
-# ============================================
-# Used for calling FOFA API on the "Information Collection" page (backend proxy to avoid exposing key in frontend)
-# Can also be configured via environment variables: FOFA_EMAIL / FOFA_API_KEY (higher priority)
-fofa:
-  base_url: https://fofa.info/api/v1/search/all # Optional, use default if left empty
-  email: "" # FOFA account email (optional, recommended to fill in system settings)
-  api_key: "" # FOFA API Key (optional, recommended to fill in system settings)
 # Agent Configuration
 # When max iterations is reached, AI automatically summarizes test results
 agent:
@@ -67,7 +59,6 @@ agent:
 multi_agent:
   enabled: true
   default_mode: multi # single | multi (frontend default, still switchable via UI)
-  robot_use_multi_agent: true # when true, WeChat Work/DingTalk/Lark robots also use Eino multi-agent (higher cost)
   batch_use_multi_agent: false # when true, each sub-task in "Batch Tasks" queue also uses Eino multi-agent (higher cost)
   max_iteration: 0 # Main agent / plan_execute executor max iterations, 0 means use agent.max_iterations
   # plan_execute specific: execute↔replan outer loop limit, 0 means Eino default 10. Executor doesn't expose Handlers: patch/reduction/plantask don't apply to PE, but tool_search tool list splitting still applies via shared ToolsConfig.
@@ -183,27 +174,25 @@ knowledge:
     # Eino indexer.WithSubIndexes: logical partition label list, written to vector table sub_indexes, retrieval can filter with sub_index_filter; empty [] if no need
     sub_indexes: []
 # ============================================
-# Robot Configuration (WeChat Work, DingTalk, Lark)
+# Chat Bots (Telegram / Slack / Discord)
 # ============================================
-# Used for mobile conversations with Pyntra via WeChat Work/DingTalk/Lark, usable without server deployment
-# Configurable in System Settings -> Robot Settings
-robots:
-  wecom: # WeChat Work
+# Chat with Pyntra from a messaging app. Each enabled bot keeps a per-chat
+# conversation; send /new to reset it, /help for commands.
+# Tokens may also be provided via environment variables at deploy time.
+bots:
+  telegram:
     enabled: false
-    token: ""
-    encoding_aes_key: ""
-    corp_id: ""
-    secret: ""
-    agent_id: 0
-  dingtalk: # DingTalk
+    token: "" # Bot token from @BotFather
+    role: "" # Optional role name (from roles/) applied to bot conversations
+  slack:
     enabled: false
-    client_id: ""
-    client_secret: ""
-  lark: # Lark
+    app_token: "" # Socket Mode app-level token (xapp-...)
+    bot_token: "" # Web API bot token (xoxb-...)
+    role: ""
+  discord:
     enabled: false
-    app_id: ""
-    app_secret: ""
-    verify_token: ""
+    token: "" # Bot token from the Discord developer portal
+    role: ""
 # ============================================
 # Skills Related Configuration
 # ============================================

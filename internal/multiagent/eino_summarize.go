@@ -2,13 +2,13 @@ package multiagent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"pyntra/internal/agent"
 	"pyntra/internal/config"
 
-	"github.com/bytedance/sonic"
 	"github.com/cloudwego/eino/adk"
 	"github.com/cloudwego/eino/adk/middlewares/summarization"
 	"github.com/cloudwego/eino/components/model"
@@ -108,7 +108,7 @@ func einoSummarizationTokenCounter(openAIModel string) summarization.TokenCounte
 				sb.WriteByte('\n')
 			}
 			if len(msg.ToolCalls) > 0 {
-				if b, err := sonic.Marshal(msg.ToolCalls); err == nil {
+				if b, err := json.Marshal(msg.ToolCalls); err == nil {
 					sb.Write(b)
 					sb.WriteByte('\n')
 				}
@@ -126,8 +126,8 @@ func einoSummarizationTokenCounter(openAIModel string) summarization.TokenCounte
 			}
 			cp := *tl
 			cp.Extra = nil
-			if text, err := sonic.MarshalString(cp); err == nil {
-				sb.WriteString(text)
+			if text, err := json.Marshal(cp); err == nil {
+				sb.Write(text)
 				sb.WriteByte('\n')
 			}
 		}

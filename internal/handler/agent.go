@@ -160,6 +160,84 @@ func (h *AgentHandler) SetAgentsMarkdownDir(absDir string) {
 	h.agentsMarkdownDir = strings.TrimSpace(absDir)
 }
 
+// ProcessMessage runs a single user message through the agent (single-agent, or
+// multi-agent when enabled in config) and returns the assistant's reply together
+// with the conversation ID. It persists the user and assistant messages and does
+// not emit SSE. Used by chat-bot integrations (Telegram / Slack / Discord).
+func (h *AgentHandler) ProcessMessage(ctx context.Context, conversationID, message, role string) (response string, convID string, err error) {
+	if strings.TrimSpace(message) == "" {
+		return "", conversationID, fmt.Errorf("empty message")
+	}
+	if conversationID == "" {
+		conv, cerr := h.db.CreateConversation(safeTruncateString(message, 50))
+		if cerr != nil {
+			return "", "", fmt.Errorf("create conversation: %w", cerr)
+		}
+		conversationID = conv.ID
+	}
+
+	// Restore history: prefer saved ReAct data, fall back to the message table.
+	history, herr := h.loadHistoryFromReActData(conversationID)
+	if herr != nil {
+		if msgs, merr := h.db.GetMessages(conversationID); merr == nil {
+			history = make([]agent.ChatMessage, 0, len(msgs))
+			for _, m := range msgs {
+				history = append(history, agent.ChatMessage{Role: m.Role, Content: m.Content})
+			}
+		} else {
+			history = []agent.ChatMessage{}
+		}
+	}
+
+	// Resolve role prompt / tools / skills.
+	finalMessage := message
+	var roleTools, roleSkills []string
+	if role != "" && role != "default" && h.config != nil && h.config.Roles != nil {
+		if r, ok := h.config.Roles[role]; ok && r.Enabled {
+			if r.UserPrompt != "" {
+				finalMessage = r.UserPrompt + "\n\n" + message
+			}
+			if len(r.Tools) > 0 {
+				roleTools = r.Tools
+			}
+			if len(r.Skills) > 0 {
+				roleSkills = r.Skills
+			}
+		}
+	}
+
+	if _, aerr := h.db.AddMessage(conversationID, "user", message, nil); aerr != nil {
+		return "", conversationID, fmt.Errorf("save user message: %w", aerr)
+	}
+
+	var mcpIDs []string
+	var lastIn, lastOut string
+	if h.config != nil && h.config.MultiAgent.Enabled {
+		res, rerr := multiagent.RunDeepAgent(ctx, h.config, &h.config.MultiAgent, h.agent, h.logger,
+			conversationID, finalMessage, history, roleTools, nil, h.agentsMarkdownDir, "")
+		if rerr != nil {
+			return "", conversationID, rerr
+		}
+		response, mcpIDs, lastIn, lastOut = res.Response, res.MCPExecutionIDs, res.LastReActInput, res.LastReActOutput
+	} else {
+		res, rerr := h.agent.AgentLoopWithProgress(ctx, finalMessage, history, conversationID, nil, roleTools, roleSkills)
+		if rerr != nil {
+			return "", conversationID, rerr
+		}
+		response, mcpIDs, lastIn, lastOut = res.Response, res.MCPExecutionIDs, res.LastReActInput, res.LastReActOutput
+	}
+
+	if _, aerr := h.db.AddMessage(conversationID, "assistant", response, mcpIDs); aerr != nil {
+		h.logger.Warn("bot: failed to save assistant message", zap.Error(aerr))
+	}
+	if lastIn != "" || lastOut != "" {
+		if serr := h.db.SaveReActData(conversationID, lastIn, lastOut); serr != nil {
+			h.logger.Warn("bot: failed to save ReAct data", zap.Error(serr))
+		}
+	}
+	return response, conversationID, nil
+}
+
 // ChatAttachment chat attachment (user uploaded file)
 type ChatAttachment struct {
 	FileName string `json:"fileName"` // display file name
@@ -593,139 +671,6 @@ func (h *AgentHandler) AgentLoop(c *gin.Context) {
 	})
 }
 
-// ProcessMessageForRobot for robot (enterprise WeChat/DingTalk/Feishu) call: same execution path as /api/agent-loop/stream (including progressCallback, process details), only does not send SSE, finally returns complete response
-func (h *AgentHandler) ProcessMessageForRobot(ctx context.Context, conversationID, message, role string) (response string, convID string, err error) {
-	if conversationID == "" {
-		title := safeTruncateString(message, 50)
-		conv, createErr := h.db.CreateConversation(title)
-		if createErr != nil {
-			return "", "", fmt.Errorf("failed to create conversation: %w", createErr)
-		}
-		conversationID = conv.ID
-	} else {
-		if _, getErr := h.db.GetConversation(conversationID); getErr != nil {
-			return "", "", fmt.Errorf("conversation does not exist")
-		}
-	}
-
-	agentHistoryMessages, err := h.loadHistoryFromReActData(conversationID)
-	if err != nil {
-		historyMessages, getErr := h.db.GetMessages(conversationID)
-		if getErr != nil {
-			agentHistoryMessages = []agent.ChatMessage{}
-		} else {
-			agentHistoryMessages = make([]agent.ChatMessage, 0, len(historyMessages))
-			for _, msg := range historyMessages {
-				agentHistoryMessages = append(agentHistoryMessages, agent.ChatMessage{Role: msg.Role, Content: msg.Content})
-			}
-		}
-	}
-
-	finalMessage := message
-	var roleTools, roleSkills []string
-	if role != "" && role != "default" && h.config.Roles != nil {
-		if r, exists := h.config.Roles[role]; exists && r.Enabled {
-			if r.UserPrompt != "" {
-				finalMessage = r.UserPrompt + "\n\n" + message
-			}
-			roleTools = r.Tools
-			roleSkills = r.Skills
-		}
-	}
-
-	if _, err = h.db.AddMessage(conversationID, "user", message, nil); err != nil {
-		return "", "", fmt.Errorf("failed to save user message: %w", err)
-	}
-	assistantMsg, err := h.db.AddMessage(conversationID, "assistant", "processing...", nil)
-	if err != nil {
-		h.logger.Warn("robot: failed to create assistant message placeholder", zap.Error(err))
-	}
-	var assistantMessageID string
-	if assistantMsg != nil {
-		assistantMessageID = assistantMsg.ID
-	}
-	progressCallback := h.createProgressCallback(conversationID, assistantMessageID, nil)
-
-	useRobotMulti := h.config != nil && h.config.MultiAgent.Enabled && h.config.MultiAgent.RobotUseMultiAgent
-	if useRobotMulti {
-		resultMA, errMA := multiagent.RunDeepAgent(
-			ctx,
-			h.config,
-			&h.config.MultiAgent,
-			h.agent,
-			h.logger,
-			conversationID,
-			finalMessage,
-			agentHistoryMessages,
-			roleTools,
-			progressCallback,
-			h.agentsMarkdownDir,
-			"deep",
-		)
-		if errMA != nil {
-			errMsg := "execution failed: " + errMA.Error()
-			if assistantMessageID != "" {
-				_, _ = h.db.Exec("UPDATE messages SET content = ? WHERE id = ?", errMsg, assistantMessageID)
-				_ = h.db.AddProcessDetail(assistantMessageID, conversationID, "error", errMsg, nil)
-			}
-			return "", conversationID, errMA
-		}
-		if assistantMessageID != "" {
-			mcpIDsJSON := ""
-			if len(resultMA.MCPExecutionIDs) > 0 {
-				jsonData, _ := json.Marshal(resultMA.MCPExecutionIDs)
-				mcpIDsJSON = string(jsonData)
-			}
-			_, err = h.db.Exec(
-				"UPDATE messages SET content = ?, mcp_execution_ids = ? WHERE id = ?",
-				resultMA.Response, mcpIDsJSON, assistantMessageID,
-			)
-			if err != nil {
-				h.logger.Warn("robot: failed to update assistant message", zap.Error(err))
-			}
-		} else {
-			if _, err = h.db.AddMessage(conversationID, "assistant", resultMA.Response, resultMA.MCPExecutionIDs); err != nil {
-				h.logger.Warn("robot: failed to save assistant message", zap.Error(err))
-			}
-		}
-		if resultMA.LastReActInput != "" || resultMA.LastReActOutput != "" {
-			_ = h.db.SaveReActData(conversationID, resultMA.LastReActInput, resultMA.LastReActOutput)
-		}
-		return resultMA.Response, conversationID, nil
-	}
-
-	result, err := h.agent.AgentLoopWithProgress(ctx, finalMessage, agentHistoryMessages, conversationID, progressCallback, roleTools, roleSkills)
-	if err != nil {
-		errMsg := "execution failed: " + err.Error()
-		if assistantMessageID != "" {
-			_, _ = h.db.Exec("UPDATE messages SET content = ? WHERE id = ?", errMsg, assistantMessageID)
-			_ = h.db.AddProcessDetail(assistantMessageID, conversationID, "error", errMsg, nil)
-		}
-		return "", conversationID, err
-	}
-	if assistantMessageID != "" {
-		mcpIDsJSON := ""
-		if len(result.MCPExecutionIDs) > 0 {
-			jsonData, _ := json.Marshal(result.MCPExecutionIDs)
-			mcpIDsJSON = string(jsonData)
-		}
-		_, err = h.db.Exec(
-			"UPDATE messages SET content = ?, mcp_execution_ids = ? WHERE id = ?",
-			result.Response, mcpIDsJSON, assistantMessageID,
-		)
-		if err != nil {
-			h.logger.Warn("robot: failed to update assistant message", zap.Error(err))
-		}
-	} else {
-		if _, err = h.db.AddMessage(conversationID, "assistant", result.Response, result.MCPExecutionIDs); err != nil {
-			h.logger.Warn("robot: failed to save assistant message", zap.Error(err))
-		}
-	}
-	if result.LastReActInput != "" || result.LastReActOutput != "" {
-		_ = h.db.SaveReActData(conversationID, result.LastReActInput, result.LastReActOutput)
-	}
-	return result.Response, conversationID, nil
-}
 
 // StreamEvent streaming event
 type StreamEvent struct {

@@ -4,7 +4,7 @@ function initRouter() {
  if (hash) {
  const hashParts = hash.split('?');
  const pageId = hashParts[0];
- if (pageId && ['dashboard', 'chat', 'info-collect', 'vulnerabilities', 'webshell', 'chat-files', 'mcp-monitor', 'mcp-management', 'knowledge-management', 'knowledge-retrieval-logs', 'roles-management', 'skills-monitor', 'skills-management', 'agents-management', 'settings', 'tasks'].includes(pageId)) {
+ if (pageId && ['dashboard', 'chat', 'vulnerabilities', 'webshell', 'chat-files', 'mcp-monitor', 'mcp-management', 'knowledge-management', 'knowledge-retrieval-logs', 'roles-management', 'skills-monitor', 'skills-management', 'agents-management', 'settings', 'tasks'].includes(pageId)) {
  switchPage(pageId);
  if (pageId === 'chat' && hashParts.length > 1) {
  const params = new URLSearchParams(hashParts[1]);
@@ -182,11 +182,6 @@ async function initPage(pageId) {
  case 'chat':
  initConversationSidebarState();
  break;
- case 'info-collect':
- if (typeof initInfoCollectPage === 'function') {
- initInfoCollectPage();
- }
- break;
  case 'tasks':
  if (typeof initTasksPage === 'function') {
  initTasksPage();
@@ -290,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
  const hashParts = hash.split('?');
  const pageId = hashParts[0];
  
- if (pageId && ['chat', 'info-collect', 'tasks', 'vulnerabilities', 'webshell', 'chat-files', 'mcp-monitor', 'mcp-management', 'knowledge-management', 'knowledge-retrieval-logs', 'roles-management', 'skills-monitor', 'skills-management', 'agents-management', 'settings'].includes(pageId)) {
+ if (pageId && ['chat', 'tasks', 'vulnerabilities', 'webshell', 'chat-files', 'mcp-monitor', 'mcp-management', 'knowledge-management', 'knowledge-retrieval-logs', 'roles-management', 'skills-monitor', 'skills-management', 'agents-management', 'settings'].includes(pageId)) {
  switchPage(pageId);
  if (pageId === 'chat' && hashParts.length > 1) {
  const params = new URLSearchParams(hashParts[1]);

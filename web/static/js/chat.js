@@ -2704,7 +2704,7 @@ function renderAttackChain(chainData) {
  return isComplexGraph ? '13px' : '15px';
  },
  'font-weight': '600', // 
- 'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif',
+ 'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
  'text-valign': 'center',
  'text-halign': 'center',
  'text-wrap': 'wrap',

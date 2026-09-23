@@ -113,15 +113,6 @@
  <span data-i18n="nav.chat">Chat</span>
  </div>
  </div>
- <div class="nav-item" data-page="info-collect">
- <div class="nav-item-content" data-title="Recon" onclick="switchPage('info-collect')" data-i18n="nav.infoCollect" data-i18n-attr="data-title" data-i18n-skip-text="true">
- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
- <circle cx="11" cy="11" r="8"></circle>
- <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
- </svg>
- <span data-i18n="nav.infoCollect">Recon</span>
- </div>
- </div>
  <div class="nav-item" data-page="tasks">
  <div class="nav-item-content" data-title="Task Management" onclick="switchPage('tasks')" data-i18n="nav.tasks" data-i18n-attr="data-title" data-i18n-skip-text="true">
  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -861,105 +852,6 @@
  </div>
  </div>
 
- <!-- Reconpage -->
- <div id="page-info-collect" class="page">
- <div class="page-header">
- <h2 data-i18n="infoCollectPage.title">Recon</h2>
- <div class="page-header-actions">
- <button class="btn-secondary" onclick="resetFofaForm()" data-i18n="infoCollectPage.reset">Reset</button>
- <button class="btn-primary" onclick="submitFofaSearch()" data-i18n="infoCollectPage.confirm">OK</button>
- </div>
- </div>
- <div class="page-content">
- <div class="info-collect-panel">
- <div class="info-collect-form">
- <div class="form-group">
- <label for="fofa-query" data-i18n="infoCollectPage.fofaQuerySyntax">FOFA query syntax</label>
- <textarea id="fofa-query" class="info-collect-query-input" rows="1" data-i18n="infoCollect.queryPlaceholder" data-i18n-attr="placeholder" placeholder=':app="Apache" && country="CN"'>e.g. app="Apache" && country="CN"</textarea>
- <small class="form-hint" data-i18n="infoCollectPage.formHint">See FOFA docs for query syntax; supports && / || / ().</small>
- <div class="info-collect-presets" aria-label="FOFA query" data-i18n="infoCollectPage.queryPresetsAria" data-i18n-attr="aria-label" data-i18n-skip-text="true">
- <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('app=&quot;Apache&quot; &amp;&amp; country=&quot;CN&quot;')" data-i18n="infoCollectPage.presetApache" data-i18n-attr="title" data-i18n-title="Apache + China" title="">Apache + China</button>
- <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('title=&quot;login&quot; &amp;&amp; country=&quot;CN&quot;')" data-i18n="infoCollectPage.presetLogin" data-i18n-attr="title" data-i18n-title="Login page + China" title="">Login page + China</button>
- <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('domain=&quot;example.com&quot;')" data-i18n="infoCollectPage.presetDomain" data-i18n-attr="title" data-i18n-title="By domain" title="">By domain</button>
- <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('ip=&quot;1.1.1.1&quot;')" data-i18n="infoCollectPage.presetIp" data-i18n-attr="title" data-i18n-title="By IP" title="">By IP</button>
- </div>
- </div>
- <div class="form-group">
- <label for="fofa-nl" data-i18n="infoCollectPage.naturalLanguage">Natural language (AI parses to FOFA)</label>
- <div class="info-collect-nl-row">
- <textarea id="fofa-nl" class="info-collect-query-input" rows="1" data-i18n="infoCollectPage.nlPlaceholder" data-i18n-attr="placeholder" placeholder="e.g. Apache sites in Missouri, US, title contains Home">e.g. Apache sites in Missouri, US, title contains Home</textarea>
- <button id="fofa-nl-parse-btn" class="btn-secondary" type="button" onclick="parseFofaNaturalLanguage()" data-i18n="infoCollectPage.parseBtn" data-i18n-attr="title" data-i18n-title="AI parse" title="parse FOFA query">AI parse</button>
- </div>
- <div id="fofa-nl-status" class="fofa-nl-status muted" style="display: none;" aria-live="polite"></div>
- <small class="form-hint" data-i18n="infoCollectPage.parseHint">Result will open in a popup for editing before running the query.</small>
- </div>
- <div class="info-collect-form-row">
- <div class="form-group">
- <label for="fofa-size" data-i18n="infoCollectPage.returnCount">Return count</label>
- <input type="number" id="fofa-size" min="1" max="10000" value="100" />
- </div>
- <div class="form-group">
- <label for="fofa-page" data-i18n="infoCollectPage.pageNum">Page</label>
- <input type="number" id="fofa-page" min="1" value="1" />
- </div>
- <div class="form-group">
- <label class="checkbox-label" style="margin-top: 24px;">
- <input type="checkbox" id="fofa-full" class="modern-checkbox" />
- <span class="checkbox-custom"></span>
- <span class="checkbox-text" data-i18n="infoCollectPage.fullLabel">full</span>
- </label>
- </div>
- </div>
- <div class="form-group">
- <label for="fofa-fields" data-i18n="infoCollectPage.returnFields">Return fields (comma-separated)</label>
- <input type="text" id="fofa-fields" value="host,ip,port,domain,title,protocol,country,province,city,server" />
- <div class="info-collect-presets" aria-label="FOFA " data-i18n="infoCollectPage.fieldsPresetsAria" data-i18n-attr="aria-label" data-i18n-skip-text="true">
- <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,ip,port,domain')" data-i18n="infoCollectPage.minFields" data-i18n-attr="title" data-i18n-title="Min fields" title="">Min fields</button>
- <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,title,ip,port,domain,protocol,server,icp,country,province,city')" data-i18n="infoCollectPage.webCommon" data-i18n-attr="title" data-i18n-title="Web common" title="">Web common</button>
- <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,ip,port,domain,title,protocol,country,province,city,server,as_number,as_organization,icp,header,banner')" data-i18n="infoCollectPage.intelEnhanced" data-i18n-attr="title" data-i18n-title="Intel enhanced" title="/">Intel enhanced</button>
- </div>
- </div>
- </div>
- </div>
-
- <div class="info-collect-results">
- <div class="info-collect-results-header">
- <div class="info-collect-results-header-left">
- <div class="info-collect-results-title" data-i18n="infoCollectPage.queryResults">Query results</div>
- <div class="info-collect-results-meta" id="fofa-results-meta">-</div>
- </div>
- <div class="info-collect-results-toolbar" aria-label="resulttool" data-i18n="infoCollectPage.resultsToolbarAria" data-i18n-attr="aria-label" data-i18n-skip-text="true">
- <div class="info-collect-selected" id="fofa-selected-meta" data-i18n="infoCollectPage.selectedRowsZero">0 selected</div>
- <button class="btn-secondary btn-small" type="button" onclick="toggleFofaColumnsPanel()" data-i18n="infoCollectPage.showHideColumns" data-i18n-attr="title" title="Show/hide columns"><span data-i18n="infoCollectPage.columns">Show/hide columns</span></button>
- <button class="btn-secondary btn-small" type="button" onclick="exportFofaResults('csv')" data-i18n="infoCollectPage.exportCsvTitle" data-i18n-attr="title" title="Export results as CSV (UTF-8)"><span data-i18n="infoCollectPage.exportCsv">Export results as CSV (UTF-8)</span></button>
- <button class="btn-secondary btn-small" type="button" onclick="exportFofaResults('json')" data-i18n="infoCollectPage.exportJsonTitle" data-i18n-attr="title" title="Export results as JSON"><span data-i18n="infoCollectPage.exportJson">Export results as JSON</span></button>
- <button class="btn-secondary btn-small" type="button" onclick="exportFofaResults('xlsx')" data-i18n="infoCollectPage.exportXlsxTitle" data-i18n-attr="title" title="Export results as Excel"><span data-i18n="infoCollectPage.exportXlsx">Export results as Excel</span></button>
- <button class="btn-primary btn-small" type="button" onclick="batchScanSelectedFofaRows()" data-i18n="infoCollectPage.batchScanTitle" data-i18n-attr="title" title="Create batch task queue from selected rows"><span data-i18n="infoCollectPage.batchScan">Create batch task queue from selected rows</span></button>
- </div>
- </div>
- <div class="info-collect-results-table-wrap">
- <div id="fofa-columns-panel" class="info-collect-columns-panel" style="display: none;">
- <div class="info-collect-columns-panel-header">
- <div class="info-collect-columns-title" data-i18n="infoCollectPage.showColumns">Show columns</div>
- <div class="info-collect-columns-actions">
- <button class="btn-secondary btn-small" type="button" onclick="showAllFofaColumns()" data-i18n="infoCollectPage.columnsPanelAll">Select all</button>
- <button class="btn-secondary btn-small" type="button" onclick="hideAllFofaColumns()" data-i18n="infoCollectPage.columnsPanelNone">Deselect all</button>
- <button class="btn-secondary btn-small" type="button" onclick="closeFofaColumnsPanel()" data-i18n="infoCollectPage.columnsPanelClose">Close</button>
- </div>
- </div>
- <div id="fofa-columns-list" class="info-collect-columns-list"></div>
- </div>
- <table class="info-collect-table">
- <thead id="fofa-results-thead"></thead>
- <tbody id="fofa-results-tbody">
- <tr><td class="muted" style="padding: 16px;" data-i18n="common.noData">No data</td></tr>
- </tbody>
- </table>
- </div>
- </div>
- </div>
- </div>
-
  <!-- Vulnerability Managementpage -->
  <div id="page-vulnerabilities" class="page">
  <div class="page-header">
@@ -1326,14 +1218,8 @@
  <div class="settings-nav-item active" data-section="basic" onclick="switchSettingsSection('basic')">
  <span data-i18n="settings.nav.basic">Basic</span>
  </div>
- <div class="settings-nav-item" data-section="infocollect" onclick="switchSettingsSection('infocollect')">
- <span data-i18n="settings.nav.infocollect">Recon</span>
- </div>
  <div class="settings-nav-item" data-section="knowledge" onclick="switchSettingsSection('knowledge')">
  <span data-i18n="settings.nav.knowledge">Knowledge base</span>
- </div>
- <div class="settings-nav-item" data-section="robots" onclick="switchSettingsSection('robots')">
- <span data-i18n="settings.nav.robots">Bots</span>
  </div>
  <div class="settings-nav-item" data-section="terminal" onclick="switchSettingsSection('terminal')">
  <span data-i18n="settings.nav.terminal">Terminal</span>
@@ -1409,14 +1295,6 @@
  <option value="multi" data-i18n="settingsBasic.multiAgentModeMulti">Multi-agent (Eino)</option>
  </select>
  </div>
- <div class="form-group">
- <label class="checkbox-label">
- <input type="checkbox" id="multi-agent-robot-use" class="modern-checkbox" />
- <span class="checkbox-custom"></span>
- <span class="checkbox-text" data-i18n="settingsBasic.multiAgentRobotUse">Use multi-agent for WeCom / DingTalk / Lark bots</span>
- </label>
- <small class="form-hint" data-i18n="settingsBasic.multiAgentRobotUseHint">Requires 'Enable multi-agent' to be checked; usage and cost will be higher.</small>
- </div>
  </div>
  </div>
 
@@ -1425,37 +1303,6 @@
  </div>
  </div>
 
- <div id="settings-section-infocollect" class="settings-section-content">
- <div class="settings-section-header">
- <h3 data-i18n="settings.infocollect.title">Reconnaissance</h3>
- </div>
-
- <!-- FOFA configuration -->
- <div class="settings-subsection">
- <h4 data-i18n="settingsBasic.fofaConfig">FOFA config</h4>
- <div class="settings-form">
- <div class="form-group">
- <label for="fofa-base-url">Base URL</label>
- <input type="text" id="fofa-base-url" data-i18n="settingsBasic.fofaBaseUrlPlaceholder" data-i18n-attr="placeholder" placeholder="https://fofa.info/api/v1/search/all (optional)" />
- <small class="form-hint" data-i18n="settingsBasic.fofaBaseUrlHint">Leave empty for default.</small>
- </div>
- <div class="form-group">
- <label for="fofa-email" data-i18n="settingsBasic.email">Email</label>
- <input type="text" id="fofa-email" data-i18n="settingsBasic.fofaEmailPlaceholder" data-i18n-attr="placeholder" placeholder="Enter FOFA email" autocomplete="off" />Enter FOFA email</div>
- <div class="form-group">
- <label for="fofa-api-key">API Key</label>
- <input type="password" id="fofa-api-key" data-i18n="settingsBasic.fofaApiKeyPlaceholder" data-i18n-attr="placeholder" placeholder="Enter FOFA API Key" autocomplete="off" />
- <small class="form-hint" data-i18n="settingsBasic.fofaApiKeyHint">Stored in server config (config.yaml) only.</small>
- </div>
- </div>
- </div>
-
- <div class="settings-actions">
- <button type="button" class="btn-primary" onclick="applySettings()" data-i18n="settings.apply.button">Apply configuration</button>
- </div>
- </div>
-
- <div id="settings-section-knowledge" class="settings-section-content">
  <div class="settings-section-header">
  <h3 data-i18n="settings.knowledge.title">Knowledge base</h3>
  </div>
@@ -1607,107 +1454,6 @@
  <small class="form-hint" data-i18n="settingsBasic.retryDelayHint">Delay between retries (ms)</small>
  </div>
  </div>
- </div>
-
- <div class="settings-actions">
- <button class="btn-primary" onclick="applySettings()" data-i18n="settings.apply.button">Apply configuration</button>
- </div>
- </div>
-
- <div id="settings-section-robots" class="settings-section-content">
- <div class="settings-section-header">
- <h3 data-i18n="settings.robots.title">Bot settings</h3>
- <p class="settings-description" data-i18n="settings.robots.description">Configure WeCom, DingTalk and Lark bots so you can chat with Pyntra on your phone without opening the web UI.</p>
- </div>
-
- <div class="settings-subsection">
- <h4 data-i18n="settings.robots.wecom.title">WeCom</h4>
- <div class="settings-form">
- <div class="form-group">
- <label class="checkbox-label">
- <input type="checkbox" id="robot-wecom-enabled" class="modern-checkbox" />
- <span class="checkbox-custom"></span>
- <span class="checkbox-text" data-i18n="settings.robots.wecom.enabled">Enable WeCom bot</span>
- </label>
- </div>
- <div class="form-group">
- <label for="robot-wecom-token" data-i18n="settings.robots.wecom.token">Token</label>
- <input type="text" id="robot-wecom-token" data-i18n="settings.robots.wecom.tokenPlaceholder" data-i18n-attr="placeholder" placeholder="Token" autocomplete="off" />Token</div>
- <div class="form-group">
- <label for="robot-wecom-encoding-aes-key" data-i18n="settings.robots.wecom.encodingAesKey">EncodingAESKey</label>
- <input type="text" id="robot-wecom-encoding-aes-key" data-i18n="settings.robots.wecom.encodingAesKeyPlaceholder" data-i18n-attr="placeholder" placeholder="EncodingAESKey (leave empty for plain mode)" autocomplete="off" />EncodingAESKey (leave empty for plain mode)</div>
- <div class="form-group">
- <label for="robot-wecom-corp-id" data-i18n="settings.robots.wecom.corpId">CorpID</label>
- <input type="text" id="robot-wecom-corp-id" data-i18n="settings.robots.wecom.corpIdPlaceholder" data-i18n-attr="placeholder" placeholder="Corp ID" autocomplete="off" />Corp ID</div>
- <div class="form-group">
- <label for="robot-wecom-secret" data-i18n="settings.robots.wecom.secret">Secret</label>
- <input type="password" id="robot-wecom-secret" data-i18n="settings.robots.wecom.secretPlaceholder" data-i18n-attr="placeholder" placeholder="App Secret" autocomplete="off" />App Secret</div>
- <div class="form-group">
- <label for="robot-wecom-agent-id" data-i18n="settings.robots.wecom.agentId">AgentID</label>
- <input type="number" id="robot-wecom-agent-id" data-i18n="settings.robots.wecom.agentIdPlaceholder" data-i18n-attr="placeholder" placeholder="App AgentId" />App AgentId</div>
- </div>
- </div>
-
- <div class="settings-subsection">
- <h4 data-i18n="settings.robots.dingtalk.title">DingTalk</h4>
- <div class="settings-form">
- <div class="form-group">
- <label class="checkbox-label">
- <input type="checkbox" id="robot-dingtalk-enabled" class="modern-checkbox" />
- <span class="checkbox-custom"></span>
- <span class="checkbox-text" data-i18n="settings.robots.dingtalk.enabled">Enable DingTalk bot</span>
- </label>
- </div>
- <div class="form-group">
- <label for="robot-dingtalk-client-id" data-i18n="settings.robots.dingtalk.clientIdLabel">Client ID (AppKey)</label>
- <input type="text" id="robot-dingtalk-client-id" data-i18n="settings.robots.dingtalk.clientIdPlaceholder" data-i18n-attr="placeholder" placeholder="DingTalk App Key" autocomplete="off" />DingTalk App Key</div>
- <div class="form-group">
- <label for="robot-dingtalk-client-secret" data-i18n="settings.robots.dingtalk.clientSecretLabel">Client Secret</label>
- <input type="password" id="robot-dingtalk-client-secret" data-i18n="settings.robots.dingtalk.clientSecretPlaceholder" data-i18n-attr="placeholder" placeholder="DingTalk App Secret" autocomplete="off" />
- <small class="form-hint" data-i18n="settings.robots.dingtalk.streamHint">Enable bot capability and configure streaming access in the open platform.</small>
- </div>
- </div>
- </div>
-
- <div class="settings-subsection">
- <h4 data-i18n="settings.robots.lark.title">Lark</h4>
- <div class="settings-form">
- <div class="form-group">
- <label class="checkbox-label">
- <input type="checkbox" id="robot-lark-enabled" class="modern-checkbox" />
- <span class="checkbox-custom"></span>
- <span class="checkbox-text" data-i18n="settings.robots.lark.enabled">Enable Lark bot</span>
- </label>
- </div>
- <div class="form-group">
- <label for="robot-lark-app-id" data-i18n="settings.robots.lark.appIdLabel">App ID</label>
- <input type="text" id="robot-lark-app-id" data-i18n="settings.robots.lark.appIdPlaceholder" data-i18n-attr="placeholder" placeholder="Lark/Feishu App ID" autocomplete="off" />Lark/Feishu App ID</div>
- <div class="form-group">
- <label for="robot-lark-app-secret" data-i18n="settings.robots.lark.appSecretLabel">App Secret</label>
- <input type="password" id="robot-lark-app-secret" data-i18n="settings.robots.lark.appSecretPlaceholder" data-i18n-attr="placeholder" placeholder="Lark/Feishu App Secret" autocomplete="off" />Lark/Feishu App Secret</div>
- <div class="form-group">
- <label for="robot-lark-verify-token" data-i18n="settings.robots.lark.verifyTokenLabel">Verify Token (Optional)</label>
- <input type="text" id="robot-lark-verify-token" data-i18n="settings.robots.lark.verifyTokenPlaceholder" data-i18n-attr="placeholder" placeholder="Event subscription Verification Token" autocomplete="off" />Event subscription Verification Token</div>
- </div>
- </div>
-
- <div class="settings-subsection">
- <h4 data-i18n="settingsRobotsExtra.botCommandsTitle">Bot command instructions</h4>
- <p class="settings-description" data-i18n="settingsRobotsExtra.botCommandsDesc">You can send the following commands in chat:</p>
- <ul style="color: var(--text-muted); font-size: 13px; line-height: 1.8; margin: 8px 0 0 16px;">
- <li><code></code> <code>help</code> — <span data-i18n="settingsRobotsExtra.botCmdHelp">Show this help</span></li>
- <li><code></code> <code>list</code> — <span data-i18n="settingsRobotsExtra.botCmdList">List conversations</span></li>
- <li><code> &lt;ID&gt;</code> <code>switch &lt;ID&gt;</code> — <span data-i18n="settingsRobotsExtra.botCmdSwitch">Switch to conversation</span></li>
- <li><code>Chat</code> <code>new</code> — <span data-i18n="settingsRobotsExtra.botCmdNew">Start new conversation</span></li>
- <li><code></code> <code>clear</code> — <span data-i18n="settingsRobotsExtra.botCmdClear">Clear context</span></li>
- <li><code>current</code> <code>current</code> — <span data-i18n="settingsRobotsExtra.botCmdCurrent">Show current conversation</span></li>
- <li><code></code> <code>stop</code> — <span data-i18n="settingsRobotsExtra.botCmdStop">Stop running task</span></li>
- <li><code></code> <code>roles</code> — <span data-i18n="settingsRobotsExtra.botCmdRoles">List roles</span></li>
- <li><code> &lt;&gt;</code> <code>role &lt;name&gt;</code> — <span data-i18n="settingsRobotsExtra.botCmdRole">Switch role</span></li>
- <li><code>delete &lt;ID&gt;</code> <code>delete &lt;ID&gt;</code> — <span data-i18n="settingsRobotsExtra.botCmdDelete">Delete conversation</span></li>
- <li><code></code> <code>version</code> — <span data-i18n="settingsRobotsExtra.botCmdVersion">Show version</span></li>
- </ul>
- <p class="settings-description" style="margin-top: 8px;" data-i18n="settingsRobotsExtra.botCommandsFooter">Otherwise, send any text for AI penetration testing / security analysis.</p>
  </div>
 
  <div class="settings-actions">
@@ -2068,8 +1814,6 @@
  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.27.0/dist/cytoscape.min.js"></script>
  <!-- ELK.js for high-quality DAG layout (reduces edge crossings) -->
  <script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.2/lib/elk.bundled.js"></script>
- <!-- SheetJS for XLSX export (info-collect) -->
- <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
  <script>
  // ELK
  if (typeof ELK === 'undefined' && typeof elk !== 'undefined') {
@@ -2679,7 +2423,6 @@ Enumerate subdomains of example.com</textarea>
  <script src="/static/js/i18n.js"></script>
  <script src="/static/js/builtin-tools.js"></script>
  <script src="/static/js/auth.js"></script>
- <script src="/static/js/info-collect.js"></script>
  <script src="/static/js/router.js"></script>
  <script src="/static/js/agents.js"></script>
  <script src="/static/js/dashboard.js"></script>

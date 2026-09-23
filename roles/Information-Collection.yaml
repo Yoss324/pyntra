@@ -7,8 +7,8 @@ tools:
     - subfinder
     - dnsenum
     - fierce
-    - fofa_search
-    - zoomeye_search
+    - shodan_search
+    - censys_search
     - nmap
     - masscan
     - rustscan

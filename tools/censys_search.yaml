@@ -1,0 +1,89 @@
+name: "censys_search"
+command: "python3"
+enabled: true
+short_description: "Query the Censys internet host search API (FOFA equivalent)."
+description: |
+  Search Censys (https://search.censys.io) for internet-exposed hosts and services.
+  Western equivalent of FOFA / Quake / ZoomEye for asset discovery and recon.
+
+  **Auth:** set `CENSYS_API_ID` and `CENSYS_API_SECRET` environment variables before
+  starting the server (Censys Search API v2, HTTP Basic auth).
+
+  **Query examples:**
+  - `services.service_name: HTTP`
+  - `services.port: 22 and location.country: Germany`
+  - `services.tls.certificates.leaf_data.subject.common_name: example.com`
+  - `autonomous_system.name: "AMAZON"`
+
+  **Returns:** JSON with `total` and a `results` list (ip, services[name/port], asn, country).
+args:
+  - "-c"
+  - |
+    import sys, os, json, base64, urllib.parse, urllib.request
+
+    api_id = os.getenv("CENSYS_API_ID", "").strip()
+    api_secret = os.getenv("CENSYS_API_SECRET", "").strip()
+    query = sys.argv[1].strip() if len(sys.argv) > 1 else ""
+    try:
+        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 50
+    except (ValueError, TypeError):
+        limit = 50
+    limit = max(1, min(limit, 100))
+
+    if not api_id or not api_secret:
+        print(json.dumps({"status": "error", "message": "CENSYS_API_ID and CENSYS_API_SECRET environment variables are not set"}))
+        sys.exit(1)
+    if not query:
+        print(json.dumps({"status": "error", "message": "Missing required parameter: query"}))
+        sys.exit(1)
+
+    params = urllib.parse.urlencode({"q": query, "per_page": limit, "virtual_hosts": "EXCLUDE"})
+    url = "https://search.censys.io/api/v2/hosts/search?" + params
+    token = base64.b64encode(f"{api_id}:{api_secret}".encode()).decode()
+    req = urllib.request.Request(url, headers={"Authorization": "Basic " + token, "Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8", "replace"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")[:300]
+        print(json.dumps({"status": "error", "status_code": e.code, "message": body}))
+        sys.exit(1)
+    except Exception as e:
+        print(json.dumps({"status": "error", "message": str(e)}))
+        sys.exit(1)
+
+    result = data.get("result", {})
+    hits = result.get("hits", [])[:limit]
+    results = []
+    for h in hits:
+        svcs = [{"name": s.get("service_name"), "port": s.get("port")} for s in h.get("services", [])]
+        results.append({
+            "ip": h.get("ip"),
+            "asn": (h.get("autonomous_system") or {}).get("name"),
+            "country": (h.get("location") or {}).get("country"),
+            "services": svcs,
+        })
+    print(json.dumps({
+        "status": "success",
+        "query": query,
+        "total": result.get("total", 0),
+        "results_count": len(results),
+        "results": results,
+    }, ensure_ascii=False, indent=2))
+parameters:
+  - name: "query"
+    type: "string"
+    description: |
+      Censys search query. Examples: `services.port: 22`,
+      `services.service_name: HTTP and location.country: Germany`,
+      `services.tls.certificates.leaf_data.subject.common_name: example.com`.
+    required: true
+    position: 0
+    format: "positional"
+  - name: "limit"
+    type: "int"
+    description: "Maximum number of results to return (1-100, default 50)."
+    required: false
+    position: 1
+    format: "positional"
+    default: 50
